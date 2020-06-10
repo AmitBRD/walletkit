@@ -170,7 +170,7 @@ extern "C" {
          
             for (int i = 0; i < depth; i++) {
                 //  _CKDpriv(&secret, &chain, 0 | BIP32_HARD); // path m/0H
-                uint32_t index = va_arg(va_list,uint32_t);
+                
                 TezosCKDpriv(&IL, &IR, 0 | BIP32_HARD);
             }
             //https://dune.network/ledger_extract/
