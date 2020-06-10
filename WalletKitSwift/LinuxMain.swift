@@ -1,4 +1,4 @@
-import XCTest
+importest XCTest
 @testable import WalletKitTests
 
 XCTMain(

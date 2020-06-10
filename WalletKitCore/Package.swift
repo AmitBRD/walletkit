@@ -44,6 +44,8 @@ let package = Package(
                 "WalletKitSQLite",
                 "WalletKitEd25519",
                 "WalletKitHederaProto",
+                "WalletKitBlake2b"
+               
             ],
             path: ".",
             sources: ["src/version"],               // Holds BRCryptoVersion.c only
@@ -131,6 +133,17 @@ let package = Package(
                 ])
             ]
         ),
+        
+        // Custom compilation flags for hedera/proto - to silence warnings
+        .target(
+           name: "WalletKitBlake2b",
+           dependencies: [],
+           path: "vendor/blake2b",
+           sources:["blake2b.c"],
+           publicHeadersPath: "include"
+        ),
+        
+       
 
         // MARK: - Core Misc Targets
 
