@@ -110,10 +110,10 @@ extern "C" {
             
             
             
-            uint8_t payload[((sizeof(TZ1_PREFIX)+sizeof(pkh) + 4))];
+            uint8_t * payload = malloc((sizeof(TZ1_PREFIX)+sizeof(pkh) + 4));
                              
-            memcpy(&payload, buffer, (sizeof(TZ1_PREFIX)+sizeof(pkh))*sizeof(uint8_t));
-            memcpy(&payload[(sizeof(TZ1_PREFIX)+sizeof(pkh))], checkSum,4 * sizeof(uint8_t));
+            memcpy(payload, buffer, (sizeof(TZ1_PREFIX)+sizeof(pkh))*sizeof(uint8_t));
+            memcpy(payload+(sizeof(TZ1_PREFIX)+sizeof(pkh)), checkSum,4 * sizeof(uint8_t));
             
             printf("\r\n payload expected 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591 actual:");
                        for(int i=0; i < sizeof(payload); i++){
@@ -122,11 +122,10 @@ extern "C" {
 //            buffer = malloc((sizeof(pkh)+4)* sizeof(uint8_t));
 //            memcpy(buffer,     pkh, sizeof(pkh) * sizeof(uint8_t));
 //            memcpy(buffer + sizeof(pkh), checkSum, 4 * sizeof(uint8_t));
-            char pk58[BRBase58Encode(NULL, 0, payload, sizeof(payload))];
-            BRBase58Encode(pk58, sizeof(pk58), payload,sizeof(payload));
-//
+            char pk58[BRBase58Encode(NULL, 0, payload, (sizeof(TZ1_PREFIX)+sizeof(pkh) + 4))];
+            BRBase58Encode(pk58, sizeof(pk58), payload,(sizeof(TZ1_PREFIX)+sizeof(pkh) + 4));
             free(buffer);
-            //free(payload);
+            free(payload);
             
             printf("\r\n\r\n pk58 expected tz1SeV3tueHQMTfquZSU7y98otvQTw6GDKaY actual: %s",pk58);
             
