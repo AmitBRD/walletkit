@@ -7,6 +7,7 @@
 
 #include "BRTezos.h"
 #include <assert.h>
+#include <stdlib.h>
 #include "support/BRKey.h"
 #include "support/BRBase58.h"
 #include "support/BRBIP32Sequence.h"
@@ -26,8 +27,16 @@ extern "C" {
     #define BLAKE20 20 /* Message digest 512 bit. */
     #define ED25519_CURVE  "ed25519 seed"
     #define HARDENED_OFFSET  0x80000000
+    
+    
+    //https://github.com/ecadlabs/taquito/blob/master/packages/taquito-utils/src/constants.ts
+    const uint8_t EDSK2_PREFIX[4] = {13, 15, 58, 7};
+    const uint8_t EDPK_PREFIX[4] = {13, 15, 37, 217};
+    const uint8_t TZ1_PREFIX[3]={6, 161, 159};
+    
     static void TezosCKDpriv(UInt256 *k, UInt256 *c, uint32_t i);
     static void printHex(UInt512 *k);
+    static void printChar(char *k);
     struct BRTezosAccountRecord {
         char * pkh; // The 20 byte blake2b hash of pk
         SigScheme scheme;
@@ -38,73 +47,168 @@ extern "C" {
         uint32_t index;     // The BIP-44 Index used for this key.
     };
 
-    
-
-    extern void createAccount()
+    //https://github.com/satoshilabs/slips/blob/master/slip-0010.md
+    void __attribute__((overloadable)) BIP32Ed25519PrivKeyPath(BRKey *key, const void *seed, size_t seedLen, int depth, va_list vlist)
     {
-        //
+        UInt512 I;
+        UInt256 IL, IR;
         
-        uint8_t md[BLAKE20];
-        blake2b_ctx ctx;
-
-        uint8_t buf[5] ={'h','e','l','l','o'};
-        size_t i = 5;
-        
+        assert(key != NULL);
+        assert(seed != NULL || seedLen == 0);
+        assert(depth >= 0);
        
-        blake2b(md,BLAKE20, NULL,0, buf,5);
-        
-    //    /* Initialize blake2b hashing context. */
-    //    if (blake2b_init(&ctx, MDSIZE, NULL, 0)){
-    //     return -1;
-    //    }
-    //
-    //    bl
-    //    /* Final round. */
-    //    blake2b_final(&ctx, md);
-        for (i = 0; i < BLAKE20; i++)
-        {
-            //20 byte: b5531c7037f06c9f2947132a6a77202c308e8939
-            //32 byte: 324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf
-         printf("%02x", md[i]);
+        if (key && (seed || seedLen == 0)) {
+            BRHMAC(&I, BRSHA512, sizeof(UInt512), ED25519_CURVE,strlen
+                   (ED25519_CURVE), seed, seedLen);
+            IL = *(UInt256 *)&I;//key
+            IR = *(UInt256 *)&I.u8[sizeof(UInt256)];//chaincode
+            var_clean(&I);
+           
+            for (int i = 0; i < depth; i++) {
+                TezosCKDpriv(&IL, &IR,va_arg(vlist, uint32_t));
+            }
+           
+            //https://dune.network/ledger_extract/
+            printf("expected secret b1e9eaa8e418370bf9abd524761c306301d7e49e8783b2cd55060214d6ca0b9d, actual: ");
+            printHex(&IL.u8);//secret
+            
+            printf("\r\n chaincode:");
+            printHex(&IR.u8);//chaincode
+            
+            unsigned char publicKey[32]={0};
+            unsigned char secretKey[64]={0};//unneeded
+            ed25519_create_keypair(publicKey, secretKey,IL.u8);
+            printf("expected public key efc82a1445744a87fec55fce35e1b7ec80f9bbed9df2a03bcdde1a346f3d4294, actual:");
+            for(int i=0; i < 32; i++){
+                printf("%02x",publicKey[i]);
+            }
+            
+            uint8_t pkh[BLAKE20];
+            blake2b(pkh, BLAKE20, NULL, 0, &publicKey[0], sizeof(publicKey));
+            
+            
+            printf("\r\n Pkh expected 4cdee21a9180f80956ab8d27fb6abdbd89934052, actual:");
+            for(int i=0; i < BLAKE20; i++){
+                           printf("%02x",pkh[i]);
+            }
+            
+            uint8_t buffer[(sizeof(TZ1_PREFIX)+sizeof(pkh))];
+            memcpy(&buffer,     TZ1_PREFIX, sizeof(TZ1_PREFIX) * sizeof(uint8_t));
+            memcpy(&buffer[sizeof(TZ1_PREFIX)], pkh, sizeof(pkh) * sizeof(uint8_t));
+            printf("\r\n buffer expected 06a19f4cdee21a9180f80956ab8d27fb6abdbd89934052 actual:");
+            for(int i=0; i < sizeof(buffer); i++){
+                           printf("%02x",buffer[i]);
+            }
+            
+            uint8_t checkSum[32];
+            BRSHA256_2(checkSum, &buffer[0], sizeof(buffer));
+            
+            printf("\r\n checksum expected 2669459120fc07bff78f00f343f84297066ad6b5f426e4076952bb0c982a97d8 actual:");
+            for(int i=0; i < 32; i++){
+                           printf("%02x",checkSum[i]);
+            }
+            
+            char pk58[BRBase58Encode(NULL, 0, buffer, BLAKE20)];
+            BRBase58Encode(pk58, sizeof(pk58), buffer, BLAKE20);
+            
+            
+            char sk58[BRBase58Encode(NULL, 0, secretKey, sizeof(secretKey))];
+            BRBase58Encode(sk58, sizeof(sk58), secretKey, sizeof(secretKey));
+            
+            
+            printf("\r\n pk58:");
+            for(int i=0; i < BLAKE20; i++){
+                           printf("%02x",pk58[i]);
+            }
+            
+            printf("\r\n sk58:");
+            for(int i=0; i < BLAKE20; i++){
+                           printf("%02x",sk58[i]);
+            }
+            
+            printf("\r\nDONE GENERATING ed25519");
+            var_clean(&IL, &IR);
         }
-        unsigned char sk[32] = {0};
-        unsigned char pk[64] = {0};
-        ed25519_create_keypair(pk,sk,&md);
-        const char * paper_key = "patient doctor olympic frog force glimpse endless antenna online dragon bargain someone";
-        
-        const char* mnemonic =  "narrow ordinary minimum tennis casual wash soul pretty impulse provide panic donor three long inquiry";
-        UInt512 seed = getTezosSeedWithPassword(mnemonic,"nmkkzarm.ywzrrhcl@tezos.example.orgdM4M4eKyFv");
-        
-        uint8_t edSeed[32]={0};
-        //this is 512 bit, we need 256 bit
-        UInt512 seed2 = getTezosSeed(paper_key);
-        
-        
-//        memcpy(edSeed, seed2.u8, 32);
-//        unsigned char publicKey[32]={0};
-//        unsigned char secretKey[64]={0};
-//        ed25519_create_keypair(publicKey, secretKey,edSeed);
-//
-//
-//        uint8_t prefix[5]={'e','d','s','k'};
-//        uint8_t preHash[37];
-//        memcpy(preHash,prefix,sizeof(prefix));
-//        memcpy(preHash+sizeof(prefix),seed.u8,32);
-//        char key[BRBase58Encode(NULL, 0, preHash, BLAKE20)];
-//        BRBase58Encode(key, sizeof(key), preHash, BLAKE20);
-//
-//        SigScheme ss = ed25519;
-//        tezosAccountCreate(ss, paper_key);
-//
-//
-        
-        printf("secret:");
-        printHex(&seed2);
-        BRKey brkey;
-        BIP32Ed25519PrivKeyPath(&brkey,&seed2, sizeof(UInt512), 1, 0 | BIP32_HARD );
-        
+    }
+    
+    void  BIP32Ed25519PrivKeyPath(BRKey * key, const void * seed, size_t seedLen, int depth , ... ){
+        va_list ap;
 
-   }
+        va_start(ap, depth);
+        BIP32Ed25519PrivKeyPath(key, seed, seedLen, depth, ap);
+        va_end(ap);
+    }
+    
+    
+    
+    void createAccount()
+        {
+            //
+            
+            uint8_t md[BLAKE20];
+            blake2b_ctx ctx;
+
+            uint8_t buf[5] ={'h','e','l','l','o'};
+            size_t i = 5;
+            
+           
+            blake2b(md,BLAKE20, NULL,0, buf,5);
+            
+        //    /* Initialize blake2b hashing context. */
+        //    if (blake2b_init(&ctx, MDSIZE, NULL, 0)){
+        //     return -1;
+        //    }
+        //
+        //    bl
+        //    /* Final round. */
+        //    blake2b_final(&ctx, md);
+            for (i = 0; i < BLAKE20; i++)
+            {
+                //20 byte: b5531c7037f06c9f2947132a6a77202c308e8939
+                //32 byte: 324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf
+             printf("%02x", md[i]);
+            }
+            unsigned char sk[32] = {0};
+            unsigned char pk[64] = {0};
+            ed25519_create_keypair(pk,sk,&md);
+            const char * paper_key = "patient doctor olympic frog force glimpse endless antenna online dragon bargain someone";
+            
+            const char* mnemonic =  "narrow ordinary minimum tennis casual wash soul pretty impulse provide panic donor three long inquiry";
+            UInt512 seed = getTezosSeedWithPassword(mnemonic,"nmkkzarm.ywzrrhcl@tezos.example.orgdM4M4eKyFv");
+            
+            uint8_t edSeed[32]={0};
+            //this is 512 bit, we need 256 bit
+            UInt512 seed2 = getTezosSeed(paper_key);
+            
+            
+    //        memcpy(edSeed, seed2.u8, 32);
+    //        unsigned char publicKey[32]={0};
+    //        unsigned char secretKey[64]={0};
+    //        ed25519_create_keypair(publicKey, secretKey,edSeed);
+    //
+    //
+    //        uint8_t prefix[5]={'e','d','s','k'};
+    //        uint8_t preHash[37];
+    //        memcpy(preHash,prefix,sizeof(prefix));
+    //        memcpy(preHash+sizeof(prefix),seed.u8,32);
+    //        char key[BRBase58Encode(NULL, 0, preHash, BLAKE20)];
+    //        BRBase58Encode(key, sizeof(key), preHash, BLAKE20);
+    //
+    //        SigScheme ss = ed25519;
+    //        tezosAccountCreate(ss, paper_key);
+    //
+    //
+            
+            printf("seed:");
+            printHex(&seed2);
+            BRKey brkey;
+            
+            BIP32Ed25519PrivKeyPath(&brkey,&seed2, sizeof(UInt512), 4, 44 | BIP32_HARD, 1729 | BIP32_HARD, 0 | BIP32_HARD, 0| BIP32_HARD );
+            
+
+       }
+    
+    
     
     static BRKey deriveTezosKeyFromSeed (UInt512 seed, uint32_t index, bool cleanPrivateKey)
        {
@@ -151,47 +255,7 @@ extern "C" {
        }
     
 
-    //https://github.com/satoshilabs/slips/blob/master/slip-0010.md
-    extern void BIP32Ed25519PrivKeyPath(BRKey *key, const void *seed, size_t seedLen, int depth, va_list vlist)
-    {
-        UInt512 I;
-        UInt256 IL, IR;
-        
-        assert(key != NULL);
-        assert(seed != NULL || seedLen == 0);
-        assert(depth >= 0);
-        
-        if (key && (seed || seedLen == 0)) {
-            BRHMAC(&I, BRSHA512, sizeof(UInt512), ED25519_CURVE,strlen
-                   (ED25519_CURVE), seed, seedLen);
-            IL = *(UInt256 *)&I;//key
-            IR = *(UInt256 *)&I.u8[sizeof(UInt256)];//chaincode
-            var_clean(&I);
-         
-            for (int i = 0; i < depth; i++) {
-                //  _CKDpriv(&secret, &chain, 0 | BIP32_HARD); // path m/0H
-                
-                TezosCKDpriv(&IL, &IR, 0 | BIP32_HARD);
-            }
-            //https://dune.network/ledger_extract/
-            printf("expected secret 1797b20f43141057338c93dfd012ba58ba9e1deda89912ab8ef5cf65f1029a71f4c81b997e383b2d96b840312fd97a93fbfdd7f05ffad68078670142b0c406a3, actual: ");
-            printHex(&IL.u8);
-             printHex(&IR.u8);
-            
-            unsigned char publicKey[32]={0};
-            unsigned char secretKey[64]={0};
-            ed25519_create_keypair(publicKey, secretKey,IL.u8);
-            
-            printf("expected public key f4c81b997e383b2d96b840312fd97a93fbfdd7f05ffad68078670142b0c406a3, actual:");
-            for(int i=0; i < 32; i++){
-                printf("%02x",publicKey[i]);
-            }
-            
-            printf("DONE GENERATING ed25519");
-            //BRKeySetSecret(key, &publicKey, 1);
-            var_clean(&IL, &IR);
-        }
-    }
+   
     
     static void TezosCKDpriv(UInt256 *il, UInt256 *ir, uint32_t i)
     {
@@ -226,6 +290,7 @@ extern "C" {
         mem_clean(buf, sizeof(buf));
     }
     
+   
     static void printHex(UInt512 *k){
         printf("\r\n");
         for (int i=0;i < (sizeof (k->u8) /sizeof (k->u8[0]));i++) {
@@ -235,8 +300,17 @@ extern "C" {
 
     }
 
+    static void printChar(char *s){
+        printf("\r\n");
+        char * t; // first copy the pointer to not change the original
+        for (t = s; s != '\0'; t++) {
+            printf("%s",t);
+        }
+        printf("\r\n");
+
+    }
     
-    extern BRTezosAccount tezosAccountCreate(SigScheme scheme, char* paperKey){
+    BRTezosAccount tezosAccountCreate(SigScheme scheme, char* paperKey){
         UInt512 seed = getTezosSeed(paperKey);
         
         printf("\r\n");
@@ -250,7 +324,7 @@ extern "C" {
         
     }
     
-    extern UInt512 getTezosSeed( const char *paperKey)
+    UInt512 getTezosSeed( const char *paperKey)
     {
         // Generate the 512bit private key using a BIP39 paperKey
         UInt512 seed = UINT512_ZERO;
@@ -259,7 +333,7 @@ extern "C" {
         return seed;
     }
     
-    extern UInt512 getTezosSeedWithPassword( const char *paperKey, const char* passphrase)
+    UInt512 getTezosSeedWithPassword( const char *paperKey, const char* passphrase)
     {
         // Generate the 512bit private key using a BIP39 paperKey
         UInt512 seed = UINT512_ZERO;
@@ -270,12 +344,12 @@ extern "C" {
     
     
     
-    extern BRTezosAccount createAccountObject(BRKey *key){
+    BRTezosAccount createAccountObject(BRKey *key){
          BRTezosAccount account = (BRTezosAccount) calloc (1, sizeof (struct BRTezosAccountRecord));
         return account;
     }
 
-    extern BRKey deriveTezosKey(SigScheme scheme, UInt512 seed, uint32_t index, bool cleanPrivateKey)
+    BRKey deriveTezosKey(SigScheme scheme, UInt512 seed, uint32_t index, bool cleanPrivateKey)
     {
         BRKey key;
         unsigned char sk[32] = {0};
@@ -305,7 +379,7 @@ extern "C" {
         }
     }
     
-    extern char * getPublicKeyHash(char* publicKey){
+    char * getPublicKeyHash(char* publicKey){
 //        P2HASH_MAGIC = bytes.fromhex('06a1a4')
 //        blake2bhash = blake2b(pubkey, digest_size=20).digest()
 //        shabytes = sha256(sha256(P2HASH_MAGIC + blake2bhash).digest()).digest()[:4]
