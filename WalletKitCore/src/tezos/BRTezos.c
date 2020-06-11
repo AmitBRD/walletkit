@@ -92,44 +92,50 @@ extern "C" {
                            printf("%02x",pkh[i]);
             }
             
-            uint8_t buffer[(sizeof(TZ1_PREFIX)+sizeof(pkh))];
-            memcpy(&buffer,     TZ1_PREFIX, sizeof(TZ1_PREFIX) * sizeof(uint8_t));
-            memcpy(&buffer[sizeof(TZ1_PREFIX)], pkh, sizeof(pkh) * sizeof(uint8_t));
+            uint8_t * buffer = malloc(((sizeof(TZ1_PREFIX)+sizeof(pkh)))*sizeof(uint8_t));
+            memcpy(buffer,     TZ1_PREFIX, sizeof(TZ1_PREFIX) * sizeof(uint8_t));
+            memcpy(buffer + sizeof(TZ1_PREFIX), pkh, sizeof(pkh) * sizeof(uint8_t));
             printf("\r\n buffer expected 06a19f4cdee21a9180f80956ab8d27fb6abdbd89934052 actual:");
-            for(int i=0; i < sizeof(buffer); i++){
+            for(int i=0; i < ((sizeof(TZ1_PREFIX)+sizeof(pkh)))*sizeof(uint8_t) ; i++){
                            printf("%02x",buffer[i]);
             }
             
             uint8_t checkSum[32];
-            BRSHA256_2(checkSum, &buffer[0], sizeof(buffer));
+            BRSHA256_2(checkSum, buffer,((sizeof(TZ1_PREFIX)+sizeof(pkh)))*sizeof(uint8_t));
             
             printf("\r\n checksum expected 2669459120fc07bff78f00f343f84297066ad6b5f426e4076952bb0c982a97d8 actual:");
             for(int i=0; i < 32; i++){
                            printf("%02x",checkSum[i]);
             }
             
-            char pk58[BRBase58Encode(NULL, 0, buffer, BLAKE20)];
-            BRBase58Encode(pk58, sizeof(pk58), buffer, BLAKE20);
             
             
-            char sk58[BRBase58Encode(NULL, 0, secretKey, sizeof(secretKey))];
-            BRBase58Encode(sk58, sizeof(sk58), secretKey, sizeof(secretKey));
+            uint8_t payload[((sizeof(TZ1_PREFIX)+sizeof(pkh) + 4))];
+                             
+            memcpy(&payload, buffer, (sizeof(TZ1_PREFIX)+sizeof(pkh))*sizeof(uint8_t));
+            memcpy(&payload[(sizeof(TZ1_PREFIX)+sizeof(pkh))], checkSum,4 * sizeof(uint8_t));
             
+            printf("\r\n payload expected 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591 actual:");
+                       for(int i=0; i < sizeof(payload); i++){
+                                      printf("%02x",payload[i]);
+                       }
+//            buffer = malloc((sizeof(pkh)+4)* sizeof(uint8_t));
+//            memcpy(buffer,     pkh, sizeof(pkh) * sizeof(uint8_t));
+//            memcpy(buffer + sizeof(pkh), checkSum, 4 * sizeof(uint8_t));
+            char pk58[BRBase58Encode(NULL, 0, payload, sizeof(payload))];
+            BRBase58Encode(pk58, sizeof(pk58), payload,sizeof(payload));
+//
+            free(buffer);
+            //free(payload);
             
-            printf("\r\n pk58:");
-            for(int i=0; i < BLAKE20; i++){
-                           printf("%02x",pk58[i]);
-            }
+            printf("\r\n\r\n pk58 expected tz1SeV3tueHQMTfquZSU7y98otvQTw6GDKaY actual: %s",pk58);
             
-            printf("\r\n sk58:");
-            for(int i=0; i < BLAKE20; i++){
-                           printf("%02x",sk58[i]);
-            }
             
             printf("\r\nDONE GENERATING ed25519");
             var_clean(&IL, &IR);
         }
     }
+    
     
     void  BIP32Ed25519PrivKeyPath(BRKey * key, const void * seed, size_t seedLen, int depth , ... ){
         va_list ap;
