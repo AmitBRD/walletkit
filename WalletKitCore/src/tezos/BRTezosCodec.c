@@ -391,6 +391,19 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
                 overflow = (bytes[bytesLen-1-i] & 0x80) >> (8-overflowBits);
                 //TODO: val + 128 (0x1000000 set to 1 if there is more bytes in the number)
             }
+        printf("\r\n");
+        overflowBits =0;
+        for(int i=0; i<25; i++){
+            uint8_t readBits = 7-i%7;
+            if(overflowBits>0){
+                printf("bytes[%d] read [%d] & bytes[%d] read [%d]\r\n",i,readBits,i-1,overflowBits);
+            }else{
+                printf("bytes[%d] read [%d]\r\n",i,readBits);
+            }
+            
+            overflowBits = (8-readBits)%7;
+        }
+        
         //TODO add final overflow bit;
         
     //        while (true) {
