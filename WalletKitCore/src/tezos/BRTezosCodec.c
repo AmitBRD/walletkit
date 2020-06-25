@@ -373,8 +373,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         }
     }
     char * print_byte_as_bits(char val) {
-        printf(",mask:");
-      for (int i = 7; 0 <= i; i--) {
+       for (int i = 7; 0 <= i; i--) {
         printf("%c", (val & (1 << i)) ? '1' : '0');
       }
       
@@ -405,23 +404,22 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             uint8_t readBits = 7-i%7;
             uint8_t readMask = 0xff >> (8-readBits);
             uint8_t overflowMask = ~readMask;
-            uint8_t val =(bytes[bytesLen-1-i] & readMask) ;
+            uint8_t val =(bytes[bytesLen-1-i] & readMask) << overflowBits ;
             if(overflow>0x0){
-                val = (val << overflowBits) | overflow ;
-                printf("\r\nbytes[%d] read [%d] & bytes[%d] read [%d]\r\n",i,
-                      readBits,i-1,overflowBits);
-                print_byte_as_bits(overflowMask);
-                print_byte_as_bits(readMask);
-            }else{
-                printf("\r\nbytes[%d] read [%d]\r\n",i,readBits);
-                print_byte_as_bits(readMask);
+                val =  val | overflow ;
             }
+            printf("\r\n overflow mask:");
+            print_byte_as_bits(overflowMask);
+            printf("\r\n read mask:");
+            print_byte_as_bits(readMask);
             if(i<bytesLen-1){
                 val += 128; //append a unary bit to MSB to indicate there are more bytes to come
             }
-            printf("val: %02x", val);
+           
             overflowBits = (8-readBits)%7;
             overflow =((bytes[bytesLen-1-i] & overflowMask)) >> (8-overflowBits);
+                
+             printf("val: %02x", val);
         }
         
         //TODO add final overflow bit;
@@ -488,8 +486,8 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         
         
         
-        uint8_t test[2] = {0x03,0xe8};//e807
-        //uint8_t test[2] = {0x27,0x13}; //934e
+        //uint8_t test[2] = {0x03,0xe8};//e807
+        uint8_t test[2] = {0x27,0x13}; //934e
         tempZEncoder(&test[0],2);
         //return zarithEnoder(&bytes[0], bytesCount);
         return NULL;
