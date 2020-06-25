@@ -372,6 +372,13 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             *targetIndex = 0;
         }
     }
+    char * print_byte_as_bits(char val) {
+        printf(",mask:");
+      for (int i = 7; 0 <= i; i--) {
+        printf("%c", (val & (1 << i)) ? '1' : '0');
+      }
+      
+    }
     
     void tempZEncoder(uint8_t * bytes, size_t bytesLen){
             
@@ -388,20 +395,33 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
                 uint8_t val = ((bytes[bytesLen-1-i] & (0xff >> (8-readBits))) << overflowBits) | overflow;
                 printf("val0: %02x, %d,%d\r\n",val, overflowBits,readBits);
                 overflowBits = (8-readBits)%7;
-                overflow = (bytes[bytesLen-1-i] & 0x80) >> (8-overflowBits);
+                overflow = (bytes[bytesLen-1-i] & (0xff << readBits)) >> (8-overflowBits);
                 //TODO: val + 128 (0x1000000 set to 1 if there is more bytes in the number)
             }
         printf("\r\n");
-        overflowBits =0;
-        for(int i=0; i<25; i++){
+        overflowBits= 0;
+        overflow = 0x0;
+        for(int i=0; i<bytesLen; i++){
             uint8_t readBits = 7-i%7;
-            if(overflowBits>0){
-                printf("bytes[%d] read [%d] & bytes[%d] read [%d]\r\n",i,readBits,i-1,overflowBits);
+            uint8_t readMask = 0xff >> (8-readBits);
+            uint8_t overflowMask = ~readMask;
+            uint8_t val =(bytes[bytesLen-1-i] & readMask) ;
+            if(overflow>0x0){
+                val = (val << overflowBits) | overflow ;
+                printf("\r\nbytes[%d] read [%d] & bytes[%d] read [%d]\r\n",i,
+                      readBits,i-1,overflowBits);
+                print_byte_as_bits(overflowMask);
+                print_byte_as_bits(readMask);
             }else{
-                printf("bytes[%d] read [%d]\r\n",i,readBits);
+                printf("\r\nbytes[%d] read [%d]\r\n",i,readBits);
+                print_byte_as_bits(readMask);
             }
-            
+            if(i<bytesLen-1){
+                val += 128; //append a unary bit to MSB to indicate there are more bytes to come
+            }
+            printf("val: %02x", val);
             overflowBits = (8-readBits)%7;
+            overflow =((bytes[bytesLen-1-i] & overflowMask)) >> (8-overflowBits);
         }
         
         //TODO add final overflow bit;
@@ -468,9 +488,9 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         
         
         
-        //uint8_t test[2] = {0x03,0xe8};//e807
-        uint8_t test[2] = {0x27,0x13}; //934e
-        tempZEncoder(&test[0], 2);
+        uint8_t test[2] = {0x03,0xe8};//e807
+        //uint8_t test[2] = {0x27,0x13}; //934e
+        tempZEncoder(&test[0],2);
         //return zarithEnoder(&bytes[0], bytesCount);
         return NULL;
     }
