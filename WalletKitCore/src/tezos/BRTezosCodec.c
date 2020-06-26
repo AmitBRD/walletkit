@@ -473,7 +473,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         return NULL;
     }
     
-    
+   
     uint8_t * encodePkh(char * pkh, size_t length )
     {
         uint8_t prefix;
@@ -497,26 +497,42 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         //          [prefix.tz2.toString()]: '0001',
         //          [prefix.tz3.toString()]: '0002',
         //        };
+//        [Prefix.TZ1]: new Uint8Array([6, 161, 159]),
+//         [Prefix.TZ2]: new Uint8Array([6, 161, 161]),
+//         [Prefix.TZ3]: new Uint8Array([6, 161, 164]),
+//
+//        [Prefix.EDSK]: new Uint8Array([43, 246, 78, 7]),
+//        [Prefix.EDSK2]: new Uint8Array([13, 15, 58, 7]),
+//        [Prefix.SPSK]: new Uint8Array([17, 162, 224, 201]),
+//        [Prefix.P2SK]: new Uint8Array([16, 81, 238, 189]),
+//
+//        [Prefix.EDPK]: new Uint8Array([13, 15, 37, 217]),
+//        [Prefix.SPPK]: new Uint8Array([3, 254, 226, 86]),
+//        [Prefix.P2PK]: new Uint8Array([3, 178, 139, 127]),
+
         printf("\r\n decoded pkh:");
         for(int i=0; i < len;i++){
             printf("%02x", decoded[i]);
         }
         printf("\r\n expected: 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
-        uint8_t target[len-1];//remove the checksum from the pkh
+        uint8_t target[len-2];//remove the checksum from the pkh
         memcpy(&target[0], &prefix,1);//add in the prefix
-        memcpy(&target[1], &decoded[0], len-2);//add in the decoded public key
+        memcpy(&target[1], &decoded[3], len-3);//add in the decoded public key
         printf("\r\n decoded target:");
         for(int i=0; i < len-1;i++){
             printf("%02x", target[i]);
         }
-        printf("\r\n expected: 0006a19f4cdee21a9180f80956ab8d27fb6abdbd899340522669");
+        printf("\r\n expected: 004cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
         
         return strdup(target);
 
         
     }
     
-    int encodePublicKey(){}
+    int encodePublicKey(){
+        
+        
+    }
     
     uint8_t encodeParams(){
         //TODO: we do not support michelson contract execution atm
