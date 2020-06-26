@@ -400,27 +400,47 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         printf("\r\n");
         overflowBits= 0;
         overflow = 0x0;
+        uint8_t readBits = 0x0;
+        uint8_t readMask =0x0;
+        uint8_t overflowMask = 0x0;
+        uint8_t val = 0x0;
         for(int i=0; i<bytesLen; i++){
-            uint8_t readBits = 7-i%7;
-            uint8_t readMask = 0xff >> (8-readBits);
-            uint8_t overflowMask = ~readMask;
-            uint8_t val =(bytes[bytesLen-1-i] & readMask) << overflowBits ;
-            if(overflow>0x0){
-                val =  val | overflow ;
-            }
+            readBits = 7-i%7;
+            readMask = 0xff >> (8-readBits);
+            overflowMask = ~readMask;
+            val =(bytes[bytesLen-1-i] & readMask) << overflowBits ;
+            val =  val | overflow ;
+            val +=128;
             printf("\r\n overflow mask:");
             print_byte_as_bits(overflowMask);
             printf("\r\n read mask:");
             print_byte_as_bits(readMask);
-            if(i<bytesLen-1){
-                val += 128; //append a unary bit to MSB to indicate there are more bytes to come
-            }
+            
            
             overflowBits = (8-readBits)%7;
             overflow =((bytes[bytesLen-1-i] & overflowMask)) >> (8-overflowBits);
-                
+            
              printf("val: %02x", val);
         }
+       
+//            printf("\r\nLAST EXPRESSION\r\n");
+//            print_byte_as_bits(overflowBits);
+//            printf("\r\n final bytes");
+//            print_byte_as_bits(bytes[0]);
+//            readBits = 7-(bytesLen)%7;
+//            readMask = 0xff >> (8- readBits);
+//            printf("\r\n read mask bits:%d", readBits);
+//            print_byte_as_bits(readMask);
+        if((bytes[0] & overflowMask) > 0x0){
+            readBits = 7-bytesLen%7;
+            overflowBits = (8-readBits)%7;
+            val =(bytes[0] & overflowMask) >> overflowBits ;
+            printf("overflow: %02x", val);
+        }else{
+            val-= 128;
+            printf("last byte replaced: %02x", val);
+        }
+        
         
         //TODO add final overflow bit;
         
@@ -486,9 +506,13 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         
         
         
-        //uint8_t test[2] = {0x03,0xe8};//e807
-        uint8_t test[2] = {0x27,0x13}; //934e
+        uint8_t test[2] = {0x03,0xe8};//e807
+        //uint8_t test[2] = {0x27,0x13}; //934e
         tempZEncoder(&test[0],2);
+        
+       
+        uint8_t test2[7]= {0x1F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+        tempZEncoder(&test2[0], 7);
         //return zarithEnoder(&bytes[0], bytesCount);
         return NULL;
     }
