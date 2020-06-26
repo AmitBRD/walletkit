@@ -509,10 +509,24 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         uint8_t test[2] = {0x03,0xe8};//e807
         //uint8_t test[2] = {0x27,0x13}; //934e
         tempZEncoder(&test[0],2);
+//
+//        expect(zarithEncoder('9007199254740991')).toEqual('ffffffffffffff0f');
+//        expect(zarithEncoder('9007199254740992')).toEqual('8080808080808010');
+//        expect(zarithEncoder('9007199254740993')).toEqual('8180808080808010');
+//        expect(zarithEncoder('9007199254740994')).toEqual('8280808080808010');
+        UInt256 uintTest1 = uint256("000000000000000000000000000000000000000000000000001fffffffffffff");
+        tempZEncoder(&uintTest1.u8[25], 7);
         
+        UInt256 uintTest2 = uint256("0000000000000000000000000000000000000000000000000020000000000000");
+               tempZEncoder(&uintTest2.u8[25], 7);
        
-        uint8_t test2[7]= {0x1F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
-        tempZEncoder(&test2[0], 7);
+        
+        UInt256 uintTest3 = uint256("0000000000000000000000000000000000000000000000000020000000000001");
+                      tempZEncoder(&uintTest3.u8[25], 7);
+        
+        UInt256 uintTest4 = uint256("0000000000000000000000000000000000000000000000000020000000000002");
+                             tempZEncoder(&uintTest4.u8[25], 7);
+        
         //return zarithEnoder(&bytes[0], bytesCount);
         return NULL;
     }
