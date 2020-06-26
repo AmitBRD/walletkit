@@ -34,8 +34,9 @@ runTezosTest (void /* ... */) {
     
     free(value);
     
-    encodeNumber(uint256("0000000000376bb71314321c45de3015fe958543afcbada242a3b1b072498e38").u8,32);
+    encodeNumber(uint256("0000000000000000000000000000000000000000000000000020000000000002"));
     
-    
+    char* encoded = encodePkh("tz1SeV3tueHQMTfquZSU7y98otvQTw6GDKaY", 36);
+    free(encoded);
     
 }

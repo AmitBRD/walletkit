@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <stdarg.h>
 #include "support/BRArray.h"
+#include "support/BRBase58.h"
+#include "blake2b/blake2b.h"
 
 
 
@@ -379,27 +381,10 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
       
     }
     
-    void tempZEncoder(uint8_t * bytes, size_t bytesLen){
-            
-            uint8_t v0= bytes[bytesLen-1] & 0x7F;
-            if(bytesLen>1){
-                v0+=128;
-            }
-            printf("\r\ntempZEncoder bytes :\r\n");
-            printf("val0: %02x",v0 );
-            uint8_t overflowBits = 1;
-            uint8_t overflow = (bytes[bytesLen-1] & 0x80) >> (8-overflowBits);
-            for(int i=1; i<=bytesLen-1; i++){
-                uint8_t readBits = 7-i%7;
-                uint8_t val = ((bytes[bytesLen-1-i] & (0xff >> (8-readBits))) << overflowBits) | overflow;
-                printf("val0: %02x, %d,%d\r\n",val, overflowBits,readBits);
-                overflowBits = (8-readBits)%7;
-                overflow = (bytes[bytesLen-1-i] & (0xff << readBits)) >> (8-overflowBits);
-                //TODO: val + 128 (0x1000000 set to 1 if there is more bytes in the number)
-            }
-        printf("\r\n");
-        overflowBits= 0;
-        overflow = 0x0;
+    uint8_t * tempZEncoder(uint8_t * bytes, size_t bytesLen){
+        uint8_t target[(((bytesLen*8 - 1) / 7)) ];
+        uint8_t overflowBits= 0;
+        uint8_t overflow = 0x0;
         uint8_t readBits = 0x0;
         uint8_t readMask =0x0;
         uint8_t overflowMask = 0x0;
@@ -419,10 +404,9 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
            
             overflowBits = (8-readBits)%7;
             overflow =((bytes[bytesLen-1-i] & overflowMask)) >> (8-overflowBits);
-            
+            target[i]=val;
              printf("val: %02x", val);
         }
-       
 //            printf("\r\nLAST EXPRESSION\r\n");
 //            print_byte_as_bits(overflowBits);
 //            printf("\r\n final bytes");
@@ -435,105 +419,109 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             readBits = 7-bytesLen%7;
             overflowBits = (8-readBits)%7;
             val =(bytes[0] & overflowMask) >> overflowBits ;
+            target[bytesLen-1]=val;
             printf("overflow: %02x", val);
         }else{
             val-= 128;
+            target[bytesLen-1]=val;
             printf("last byte replaced: %02x", val);
         }
-        
-        
-        //TODO add final overflow bit;
-        
-    //        while (true) {
-    //          // eslint-disable-line
-    //          if (nn.lt(128)) {
-    //            if (nn.lt(16)) fn.push('0');
-    //            fn.push(nn.toString(16));
-    //            break;
-    //          } else {
-    //            let b = nn.mod(128);
-    //            nn = nn.minus(b);
-    //            nn = nn.dividedBy(128);
-    //            b = b.plus(128);
-    //            fn.push(b.toString(16));
-    //          }
-    //        }
-        }
-    uint8_t * zarithEnoder(uint8_t * value, size_t count){
-      
-      uint8_t zarith[count];
-      printf("\r\n zarith 7bit little endian encoding");
-      uint8_t shifted = 0x00;
-      uint8_t overflow = 0x01 & value[0] >> 7;
-      for(int i=7; i<count*7; i+=7){
-          
-          uint8_t index = (i /8);
-          uint8_t bits = i%8;
-          0xff << bits;
-          0xff >> (7-bits) %7;
-          printf("\r\index:%d read:%d index%d read:%d", index, bits, index+1, (7-bits) %7);
-          printf(" i:%d value:%02x",(i/7)-1, value[(i/7)-1]);
-          
-      }
-      return NULL;
+        return strdup(target);
     }
+        
+        
+
 
     
     /*
      http://tezos.gitlab.io/api/p2p.html?highlight=zarith
     A variable length sequence of bytes, encoding a Zarith number. Each byte has a running unary size bit: the most significant bit of each byte tells is this is the last byte in the sequence (0) or if there is more to read (1). Size bits ignored, data is then the binary representation of the absolute value of the number in little endian order.*/
     void
-    encodeNumber ( uint8_t *source, size_t sourceCount) {
+    encodeNumber ( UInt256 number) {
         // Encode a number by converting the number to a big_endian representation and then simply
         // encoding those bytes.
-        printf("bytes sent in :\r\n");
-        for(int i=0; i < sourceCount; i++){
-                              printf("%02x",source[i]);
-               }
-        uint8_t bytes [sourceCount]; // big_endian representation of the bytes in 'source'
-        size_t bytesIndex = findNonZeroIndex(source, sourceCount);
-        size_t bytesCount = sourceCount - bytesIndex;           // The number of bytes to encode
-        
-        //convert the bytes to litle endian format
-        for (size_t i = 0; i < sourceCount; i++) {
-            bytes[i] = source[sourceCount - 1 - i];
-        }
-
-        printf("litle endian bytes :\r\n");
-        for(int i=0; i < bytesCount; i++){
-                       printf("%02x",bytes[i]);
-        }
         
         
+        
+        size_t zeroIndex = findNonZeroIndex(number.u8,32);
+        tempZEncoder(&number.u8[zeroIndex], 32-zeroIndex);
         
         uint8_t test[2] = {0x03,0xe8};//e807
         //uint8_t test[2] = {0x27,0x13}; //934e
-        tempZEncoder(&test[0],2);
+        uint8_t * result = tempZEncoder(&test[0],2);
+        free(result);
 //
 //        expect(zarithEncoder('9007199254740991')).toEqual('ffffffffffffff0f');
 //        expect(zarithEncoder('9007199254740992')).toEqual('8080808080808010');
 //        expect(zarithEncoder('9007199254740993')).toEqual('8180808080808010');
 //        expect(zarithEncoder('9007199254740994')).toEqual('8280808080808010');
         UInt256 uintTest1 = uint256("000000000000000000000000000000000000000000000000001fffffffffffff");
-        tempZEncoder(&uintTest1.u8[25], 7);
+        result = tempZEncoder(&uintTest1.u8[25], 7);
+        free(result);
         
         UInt256 uintTest2 = uint256("0000000000000000000000000000000000000000000000000020000000000000");
-               tempZEncoder(&uintTest2.u8[25], 7);
-       
+         result =       tempZEncoder(&uintTest2.u8[25], 7);
+       free(result);
         
         UInt256 uintTest3 = uint256("0000000000000000000000000000000000000000000000000020000000000001");
-                      tempZEncoder(&uintTest3.u8[25], 7);
-        
+        result =               tempZEncoder(&uintTest3.u8[25], 7);
+        free(result);
         UInt256 uintTest4 = uint256("0000000000000000000000000000000000000000000000000020000000000002");
-                             tempZEncoder(&uintTest4.u8[25], 7);
-        
+          result =                    tempZEncoder(&uintTest4.u8[25], 7);
+        free(result);
         //return zarithEnoder(&bytes[0], bytesCount);
         return NULL;
     }
     
     
+    uint8_t * encodePkh(char * pkh, size_t length )
+    {
+        uint8_t prefix;
+        if(memcmp(pkh, "tz1", 3)==0){
+            prefix = 0x00;
+           //TZ1 support only
+        }else if(memcmp(pkh, 'tz2', 3)==0){
+            prefix = 0x01;
+        }else if(memcmp(pkh, 'tz3', 3)==0){
+            prefix = 0x02;
+        }else{
+            return NULL;
+        }
+        
+        size_t len = BRBase58Decode(NULL, 0, pkh);
+        uint8_t decoded[len];
+        BRBase58Decode(&decoded[0], len, pkh);
+        //  taquito-utils.js constants:
+        //        const prefixMap = {
+        //          [prefix.tz1.toString()]: '0000',
+        //          [prefix.tz2.toString()]: '0001',
+        //          [prefix.tz3.toString()]: '0002',
+        //        };
+        printf("\r\n decoded pkh:");
+        for(int i=0; i < len;i++){
+            printf("%02x", decoded[i]);
+        }
+        printf("\r\n expected: 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
+        uint8_t target[len-1];//remove the checksum from the pkh
+        memcpy(&target[0], &prefix,1);//add in the prefix
+        memcpy(&target[1], &decoded[0], len-2);//add in the decoded public key
+        printf("\r\n decoded target:");
+        for(int i=0; i < len-1;i++){
+            printf("%02x", target[i]);
+        }
+        printf("\r\n expected: 0006a19f4cdee21a9180f80956ab8d27fb6abdbd899340522669");
+        
+        return strdup(target);
+
+        
+    }
     
+    int encodePublicKey(){}
     
+    uint8_t encodeParams(){
+        //TODO: we do not support michelson contract execution atm
+        return 0x00;
+    }
     
     
  void
