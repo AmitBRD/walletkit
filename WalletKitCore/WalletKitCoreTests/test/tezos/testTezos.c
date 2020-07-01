@@ -83,7 +83,15 @@ runTezosTest (void /* ... */) {
        printBuffer(encoded);
        free(encoded.buffer);
     
+    encoded = encodeDelegate("tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn",1);
+    printf("\r\n Delegate expected:ff0035e993d8c7aaa42b5e3ccd86a33390ececc73abd actual:");
+         printBuffer(encoded);
+         free(encoded.buffer);
     
+    encoded = encodeDelegate(NULL,0);
+    printf("\r\n Delegate expected:00 actual:");
+         printBuffer(encoded);
+         free(encoded.buffer);
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);
     free(encoded2);

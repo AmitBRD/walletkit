@@ -625,22 +625,22 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         if(v>0){ return 0xff;}else{return 0x00;}
     }
     
-    uint8_t* encodeDelegate(char * pkh,size_t length, int delegate){
-        uint8_t * target;
+    struct Data encodeDelegate(char * pkh,int delegate){
         uint8_t bool =  encodeBool(delegate);
+        size_t len = 1;
         if(delegate>0){
-            uint8_t buffer[26];
             struct Data encodedPkh = encodePkh(pkh);
-            memcpy(&buffer[1], encodedPkh.buffer, 25);
+             len += encodedPkh.length;
+            uint8_t buffer[len];
+            memcpy(&buffer[1], encodedPkh.buffer, encodedPkh.length);
             free(encodedPkh.buffer);
-            target = buffer;
+            memcpy(&buffer[0], &bool, 1);
+            return uint8tdup(buffer, len);
         }else{
-            uint8_t buffer[1];
-            target = buffer;
+            uint8_t buffer[1]={bool};
+            return uint8tdup(buffer, len);
         }
-        memcpy(target,&bool, 1);
-        return strdup(target);
-        
+            
     }
     
 //    // See https://tezos.gitlab.io/api/p2p.html
@@ -656,19 +656,16 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
 //      0x05: 'proposals',
 //    };
 
-    enum operation {
-        reveal = 0x6b,
-        delegation = 0x6e,
-        transaction = 0x6c,
-        seed_nonce_revalation= 0x01
-    };
-    uint8_t * encodeOperation(enum operation op, ...){
+    
+    uint8_t * encodeOperation(enum operation op, va_list args){
         switch (op) {
             case reveal:
                 break;
             case delegation:
                 break;
             case transaction:
+                (uint8_t)op;
+                //encodeTransaction(args);
                 //TODO: pass on varargs to encodeTransaction(...);
                 break;
             default:
@@ -687,6 +684,10 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         //we want to remove the prefix from the decoded branch
         return uint8tdup(&decoded[sizeof(prefix)],
                          sizeof(decoded)-sizeof(prefix));
+    }
+    
+    void encodeTransaction(UInt256 fee){
+        return;
     }
     
     

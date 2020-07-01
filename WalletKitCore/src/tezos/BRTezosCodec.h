@@ -32,6 +32,19 @@ struct Data{
     size_t length;
 };
 
+
+enum operation {
+    reveal = 0x6b,
+    delegation = 0x6e,
+    transaction = 0x6c,
+    seed_nonce_revalation= 0x01
+};
+
+struct Operation{
+    enum operation op;
+    
+};
+
 uint8_t* padLeft(BRTezosData data, size_t targetSize);
 uint8_t * encodeBytes(uint8_t * bytes, uint64_t bytesLen);
 uint8_t * encodeString(char * value, uint64_t strLength);
@@ -41,6 +54,7 @@ struct Data encodePkh(char * pkh);
 uint8_t* encodeInt32(uint32_t u32);
 struct Data encodeAddress(char * pk);
 struct Data encodeBranch(char * branch);
+struct Data encodeDelegate(char * pkh,int delegate);
 #ifdef __cplusplus
 }
 #endif
