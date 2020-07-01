@@ -63,45 +63,27 @@ runTezosTest (void /* ... */) {
         printf("\r\n Zarith expected:8280808080808010 actual:");
         printBuffer(zarithData);
         free(zarithData.buffer);
-//
+
+//    struct Data encoded = encodePkh("tz1SeV3tueHQMTfquZSU7y98otvQTw6GDKaY");
+//    printBuffer(encoded);
+//    free(encoded.buffer);
     
-    //TODO: add these test cases to encodeNumber
-    
-    //        uint8_t test[2] = {0x03,0xe8};//e807 uint256(...1000)
-    //        uint8_t test[2] = {0x27,0x13}; //934e uint256(...10003)
-    //        expect(zarithEncoder('9007199254740991')).toEqual('ffffffffffffff0f');
-    //        expect(zarithEncoder('9007199254740992')).toEqual('8080808080808010');
-    //        expect(zarithEncoder('9007199254740993')).toEqual('8180808080808010');
-    //        expect(zarithEncoder('9007199254740994')).toEqual('8280808080808010');
-    //        UInt256 uintTest1 = uint256("000000000000000000000000000000000000000000000000001fffffffffffff");
-    //        result = tempZEncoder(&uintTest1.u8[25], 7);
-    //        free(result);
-    //
-    //        UInt256 uintTest2 = uint256("0000000000000000000000000000000000000000000000000020000000000000");
-    //         result =       tempZEncoder(&uintTest2.u8[25], 7);
-    //       free(result);
-    //
-    //        UInt256 uintTest3 = uint256("0000000000000000000000000000000000000000000000000020000000000001");
-    //        result =               tempZEncoder(&uintTest3.u8[25], 7);
-    //        free(result);
-    //        UInt256 uintTest4 = uint256("0000000000000000000000000000000000000000000000000020000000000002");
-    //          result =                    tempZEncoder(&uintTest4.u8[25], 7);
-    //        free(result);
-    
-    
-    struct Data encoded = encodePkh("tz1SeV3tueHQMTfquZSU7y98otvQTw6GDKaY", 36);
-    printBuffer(encoded);
-    free(encoded.buffer);
-    
-    encoded = encodePkh("tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn", 36);
+    struct Data encoded = encodePkh("tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn");
     printf("\r\n PKH expected:0035e993d8c7aaa42b5e3ccd86a33390ececc73abd actual:");
     printBuffer(encoded);
     free(encoded.buffer);
     
-    encoded = encodeAddress("tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn", 36);
+    encoded = encodeAddress("tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn");
     printf("\r\n Address expected:000035e993d8c7aaa42b5e3ccd86a33390ececc73abd actual:");
     printBuffer(encoded);
     free(encoded.buffer);
+    
+    encoded = encodeBranch("BLzyjjHKEKMULtvkpSHxuZxx6ei6fpntH2BTkYZiLgs8zLVstvX");
+    printf("\r\n Branch expected:a99b946c97ada0f42c1bdeae0383db7893351232a832d00d0cd716eb6f66e561 actual:");
+       printBuffer(encoded);
+       free(encoded.buffer);
+    
+    
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);
     free(encoded2);

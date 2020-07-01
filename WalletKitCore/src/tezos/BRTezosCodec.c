@@ -483,7 +483,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
 
     
    
-    struct Data encodePkh(char * pkh, size_t length )
+    struct Data encodePkh(char * pkh )
     {
         uint8_t prefix;
         if(memcmp(pkh, "tz1", 3)==0){
@@ -501,10 +501,10 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         uint8_t decoded[len];
         BRBase58CheckDecode(&decoded[0], len, pkh);
 
-        printf("\r\n decoded pkh:");
-        for(int i=0; i < len;i++){
-            printf("%02x", decoded[i]);
-        }
+//        printf("\r\n decoded pkh:");
+//        for(int i=0; i < len;i++){
+//            printf("%02x", decoded[i]);
+//        }
         //printf("\r\n expected: 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
         uint8_t target[len-2];//remove the prefix
         memcpy(&target[0], &prefix,1);//add in the prefix
@@ -527,7 +527,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     static uint8_t PREFIX_SPPK[] = {3, 254, 226, 86};
     static uint8_t PREFIX_P2PK[] = {3, 178, 139, 127};
     
-    struct Data encodePublicKey(char * pk, size_t length){
+    struct Data encodePublicKey(char * pk){
         uint8_t prefix;
         if(memcmp(PREFIX_EDPK, pk, 4)==0){
                    prefix = 0x00;
@@ -544,17 +544,17 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         uint8_t decoded[len];
         BRBase58Decode(&decoded[0], len, pk);
 
-        printf("\r\n decoded pkh:");
-        for(int i=0; i < len;i++){
-            printf("%02x", decoded[i]);
-        }
+//        printf("\r\n decoded pkh:");
+//        for(int i=0; i < len;i++){
+//            printf("%02x", decoded[i]);
+//        }
         uint8_t target[len-3];//remove the prefix
         memcpy(&target[0], &prefix,1);//add in the prefix
         memcpy(&target[1], &decoded[4], len-4);//add in the decoded public key removing the prefix
-        printf("\r\n decoded public key:");
-        for(int i=0; i < len-3;i++){
-            printf("%02x", target[i]);
-        }
+//        printf("\r\n decoded public key:");
+//        for(int i=0; i < len-3;i++){
+//            printf("%02x", target[i]);
+//        }
         //printf("\r\n expected: ");
         //TODO: add unit test from taquito
         return uint8tdup(target, len-3);
@@ -581,7 +581,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     //      }
     //    };
     
-    struct Data encodeAddress(char * address, size_t addressLen){
+    struct Data encodeAddress(char * address){
         uint8_t prefix;
         if(memcmp(address, "tz1", 3)==0 || memcmp(address, "tz2", 3)==0 || memcmp(address, "tz3", 3)==0){
             prefix = 0x00;
@@ -590,7 +590,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             return;
         }
         
-        struct Data encoded = encodePkh(address, addressLen);
+        struct Data encoded = encodePkh(address);
        
         uint8_t target[encoded.length + 1];
         memcpy(&target[0], &prefix, 1);
@@ -630,7 +630,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         uint8_t bool =  encodeBool(delegate);
         if(delegate>0){
             uint8_t buffer[26];
-            struct Data encodedPkh = encodePkh(pkh, length);
+            struct Data encodedPkh = encodePkh(pkh);
             memcpy(&buffer[1], encodedPkh.buffer, 25);
             free(encodedPkh.buffer);
             target = buffer;
@@ -678,12 +678,15 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         
     }
     //[Prefix.B]: new Uint8Array([1, 52]),
-    uint8_t * encodeBranch(char * branch, size_t length){
-        uint8_t target[length+2];
+    struct Data encodeBranch(char * branch){
+        
+        size_t len = BRBase58CheckDecode(NULL, 0, branch);
+        uint8_t decoded[len];
+        BRBase58CheckDecode(&decoded[0], len, branch);
         uint8_t prefix[2] = {1, 52};
-        memcpy(&target[0], &prefix[0], 2);
-        memcpy(&target[2], branch, length);
-        return strdup(target);
+        //we want to remove the prefix from the decoded branch
+        return uint8tdup(&decoded[sizeof(prefix)],
+                         sizeof(decoded)-sizeof(prefix));
     }
     
     

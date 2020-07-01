@@ -37,9 +37,10 @@ uint8_t * encodeBytes(uint8_t * bytes, uint64_t bytesLen);
 uint8_t * encodeString(char * value, uint64_t strLength);
 struct Data zarithEncoder(uint8_t * bytes, size_t bytesLen);
 struct Data encodeNumber ( UInt256 number);
-struct Data encodePkh(char * pkh, size_t length );
+struct Data encodePkh(char * pkh);
 uint8_t* encodeInt32(uint32_t u32);
-struct Data encodeAddress(char * pk, size_t length);
+struct Data encodeAddress(char * pk);
+struct Data encodeBranch(char * branch);
 #ifdef __cplusplus
 }
 #endif
