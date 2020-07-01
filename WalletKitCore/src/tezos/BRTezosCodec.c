@@ -399,8 +399,8 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
       
     }
     
-    uint8_t * tempZEncoder(uint8_t * bytes, size_t bytesLen){
-        uint8_t target[(((bytesLen*8 - 1) / 7)) ];
+    struct Data zarithEncoder(uint8_t * bytes, size_t bytesLen){
+        uint8_t target[(((bytesLen*8) / 7)) ];
         uint8_t overflowBits= 0;
         uint8_t overflow = 0x0;
         uint8_t readBits = 0x0;
@@ -414,16 +414,16 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             val =(bytes[bytesLen-1-i] & readMask) << overflowBits ;
             val =  val | overflow ;
             val +=128;
-            printf("\r\n overflow mask:");
-            print_byte_as_bits(overflowMask);
-            printf("\r\n read mask:");
-            print_byte_as_bits(readMask);
+//            printf("\r\n overflow mask:");
+//            print_byte_as_bits(overflowMask);
+//            printf("\r\n read mask:");
+//            print_byte_as_bits(readMask);
             
            
             overflowBits = (8-readBits)%7;
             overflow =((bytes[bytesLen-1-i] & overflowMask)) >> (8-overflowBits);
             target[i]=val;
-             printf("val: %02x", val);
+             //printf("val: %02x", val);
         }
 //            printf("\r\nLAST EXPRESSION\r\n");
 //            print_byte_as_bits(overflowBits);
@@ -437,14 +437,14 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             readBits = 7-bytesLen%7;
             overflowBits = (8-readBits)%7;
             val =(bytes[0] & overflowMask) >> overflowBits ;
-            target[bytesLen-1]=val;
-            printf("overflow: %02x", val);
+            target[sizeof(target)-1]=val;
+            //printf("overflow: %02x", val);
         }else{
             val-= 128;
-            target[bytesLen-1]=val;
-            printf("last byte replaced: %02x", val);
+            target[sizeof(target)-1]=val;
+            //printf("last byte replaced: %02x", val);
         }
-        return strdup(target);
+        return uint8tdup(&target[0], sizeof(target));
     }
         
         
@@ -454,11 +454,11 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     /*
      http://tezos.gitlab.io/api/p2p.html?highlight=zarith
     A variable length sequence of bytes, encoding a Zarith number. Each byte has a running unary size bit: the most significant bit of each byte tells is this is the last byte in the sequence (0) or if there is more to read (1). Size bits ignored, data is then the binary representation of the absolute value of the number in little endian order.*/
-    void
+    struct Data
     encodeNumber ( UInt256 number) {
         size_t zeroIndex = findNonZeroIndex(number.u8,32);
-        uint8_t * result = tempZEncoder(&number.u8[zeroIndex], 32-zeroIndex);
-        return NULL;
+        return zarithEncoder(&number.u8[zeroIndex], 32-zeroIndex);
+        
     }
     
     

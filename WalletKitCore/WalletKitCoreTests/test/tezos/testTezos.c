@@ -39,7 +39,24 @@ runTezosTest (void /* ... */) {
     
     free(value);
     
-    encodeNumber(uint256("0000000000000000000000000000000000000000000000000020000000000002"));
+    struct Data zarithData = encodeNumber(uint256("000000000000000000000000000000000000000000000000001fffffffffffff"));
+       printf("\r\n Zarith expected:ffffffffffffff0f actual:");
+       printBuffer(zarithData);
+       free(zarithData.buffer);
+    zarithData = encodeNumber(uint256("0000000000000000000000000000000000000000000000000020000000000000"));
+       printf("\r\n Zarith expected:8080808080808010 actual:");
+       printBuffer(zarithData);
+       free(zarithData.buffer);
+    zarithData = encodeNumber(uint256("0000000000000000000000000000000000000000000000000020000000000001"));
+       printf("\r\n Zarith expected:8180808080808010 actual:");
+       printBuffer(zarithData);
+       free(zarithData.buffer);
+    zarithData = encodeNumber(uint256("0000000000000000000000000000000000000000000000000020000000000002"));
+        printf("\r\n Zarith expected:8280808080808010 actual:");
+        printBuffer(zarithData);
+        free(zarithData.buffer);
+//
+    
     //TODO: add these test cases to encodeNumber
     
     //        uint8_t test[2] = {0x03,0xe8};//e807 uint256(...1000)
