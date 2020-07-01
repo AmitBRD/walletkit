@@ -64,6 +64,7 @@ extern "C" {
 //    
 //}TezosReveal;
 
+
     void
     swapBytesIfLittleEndian (uint8_t *target, uint8_t *source, size_t count) {
         assert (target != source);  // common overlap case, but wholely insufficient.
@@ -124,6 +125,8 @@ extern "C" {
 
         swapBytesIfLittleEndian(target, value, targetCount);
     }
+    
+   
 
     unsigned char* hexstr_to_char(const char* hexstr)
        {
@@ -151,7 +154,22 @@ extern "C" {
          chrs[2*j]='\0';
          return chrs;
        }
-
+    struct Data  uint8tdup(uint8_t * buffer, size_t length){
+        /**TODO:
+         return a structure encapsulating buffer and length so we may concat all the DataStructs
+         
+         DataStruct {
+            uint8_t * buffer;
+            size_t length;
+         }
+        **/
+        struct Data data;
+        data.buffer = malloc(length * sizeof(uint8_t));
+        memcpy(data.buffer, buffer, length);
+        data.length = length;
+        return data;
+        //return barray2hexstr(buffer,length);
+    }
 
 
 //export const pad = (num: number, paddingLen: number = 8) => {
@@ -438,43 +456,34 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     A variable length sequence of bytes, encoding a Zarith number. Each byte has a running unary size bit: the most significant bit of each byte tells is this is the last byte in the sequence (0) or if there is more to read (1). Size bits ignored, data is then the binary representation of the absolute value of the number in little endian order.*/
     void
     encodeNumber ( UInt256 number) {
-        // Encode a number by converting the number to a big_endian representation and then simply
-        // encoding those bytes.
-        
-        
-        
         size_t zeroIndex = findNonZeroIndex(number.u8,32);
-        tempZEncoder(&number.u8[zeroIndex], 32-zeroIndex);
-        
-        uint8_t test[2] = {0x03,0xe8};//e807
-        //uint8_t test[2] = {0x27,0x13}; //934e
-        uint8_t * result = tempZEncoder(&test[0],2);
-        free(result);
-//
-//        expect(zarithEncoder('9007199254740991')).toEqual('ffffffffffffff0f');
-//        expect(zarithEncoder('9007199254740992')).toEqual('8080808080808010');
-//        expect(zarithEncoder('9007199254740993')).toEqual('8180808080808010');
-//        expect(zarithEncoder('9007199254740994')).toEqual('8280808080808010');
-        UInt256 uintTest1 = uint256("000000000000000000000000000000000000000000000000001fffffffffffff");
-        result = tempZEncoder(&uintTest1.u8[25], 7);
-        free(result);
-        
-        UInt256 uintTest2 = uint256("0000000000000000000000000000000000000000000000000020000000000000");
-         result =       tempZEncoder(&uintTest2.u8[25], 7);
-       free(result);
-        
-        UInt256 uintTest3 = uint256("0000000000000000000000000000000000000000000000000020000000000001");
-        result =               tempZEncoder(&uintTest3.u8[25], 7);
-        free(result);
-        UInt256 uintTest4 = uint256("0000000000000000000000000000000000000000000000000020000000000002");
-          result =                    tempZEncoder(&uintTest4.u8[25], 7);
-        free(result);
-        //return zarithEnoder(&bytes[0], bytesCount);
+        uint8_t * result = tempZEncoder(&number.u8[zeroIndex], 32-zeroIndex);
         return NULL;
     }
     
+    
+    //  taquito-utils.js constants:
+    //        const prefixMap = {
+    //          [prefix.tz1.toString()]: '0000',
+    //          [prefix.tz2.toString()]: '0001',
+    //          [prefix.tz3.toString()]: '0002',
+    //        };
+    //        [Prefix.TZ1]: new Uint8Array([6, 161, 159]),
+    //         [Prefix.TZ2]: new Uint8Array([6, 161, 161]),
+    //         [Prefix.TZ3]: new Uint8Array([6, 161, 164]),
+    //
+    //        [Prefix.EDSK]: new Uint8Array([43, 246, 78, 7]),
+    //        [Prefix.EDSK2]: new Uint8Array([13, 15, 58, 7]),
+    //        [Prefix.SPSK]: new Uint8Array([17, 162, 224, 201]),
+    //        [Prefix.P2SK]: new Uint8Array([16, 81, 238, 189]),
+    //
+    //        [Prefix.EDPK]: new Uint8Array([13, 15, 37, 217]),
+    //        [Prefix.SPPK]: new Uint8Array([3, 254, 226, 86]),
+    //        [Prefix.P2PK]: new Uint8Array([3, 178, 139, 127]),
+
+    
    
-    uint8_t * encodePkh(char * pkh, size_t length )
+    struct Data encodePkh(char * pkh, size_t length )
     {
         uint8_t prefix;
         if(memcmp(pkh, "tz1", 3)==0){
@@ -485,59 +494,210 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         }else if(memcmp(pkh, 'tz3', 3)==0){
             prefix = 0x02;
         }else{
-            return NULL;
+            return;
         }
-        
-        size_t len = BRBase58Decode(NULL, 0, pkh);
+        //decode the pkh and remove the checksum
+        size_t len = BRBase58CheckDecode(NULL, 0, pkh);
         uint8_t decoded[len];
-        BRBase58Decode(&decoded[0], len, pkh);
-        //  taquito-utils.js constants:
-        //        const prefixMap = {
-        //          [prefix.tz1.toString()]: '0000',
-        //          [prefix.tz2.toString()]: '0001',
-        //          [prefix.tz3.toString()]: '0002',
-        //        };
-//        [Prefix.TZ1]: new Uint8Array([6, 161, 159]),
-//         [Prefix.TZ2]: new Uint8Array([6, 161, 161]),
-//         [Prefix.TZ3]: new Uint8Array([6, 161, 164]),
-//
-//        [Prefix.EDSK]: new Uint8Array([43, 246, 78, 7]),
-//        [Prefix.EDSK2]: new Uint8Array([13, 15, 58, 7]),
-//        [Prefix.SPSK]: new Uint8Array([17, 162, 224, 201]),
-//        [Prefix.P2SK]: new Uint8Array([16, 81, 238, 189]),
-//
-//        [Prefix.EDPK]: new Uint8Array([13, 15, 37, 217]),
-//        [Prefix.SPPK]: new Uint8Array([3, 254, 226, 86]),
-//        [Prefix.P2PK]: new Uint8Array([3, 178, 139, 127]),
+        BRBase58CheckDecode(&decoded[0], len, pkh);
 
         printf("\r\n decoded pkh:");
         for(int i=0; i < len;i++){
             printf("%02x", decoded[i]);
         }
-        printf("\r\n expected: 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
-        uint8_t target[len-2];//remove the checksum from the pkh
+        //printf("\r\n expected: 06a19f4cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
+        uint8_t target[len-2];//remove the prefix
         memcpy(&target[0], &prefix,1);//add in the prefix
-        memcpy(&target[1], &decoded[3], len-3);//add in the decoded public key
-        printf("\r\n decoded target:");
-        for(int i=0; i < len-1;i++){
-            printf("%02x", target[i]);
-        }
-        printf("\r\n expected: 004cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
-        
-        return strdup(target);
+        memcpy(&target[1], &decoded[3], len-3);//add in the decoded public key removing the prefix and checksum
+//        printf("\r\n decoded target:");
+//        for(int i=0; i < len-2;i++){
+//            printf("%02x", target[i]);
+//        }
+//        printf("\r\n expected: 004cdee21a9180f80956ab8d27fb6abdbd8993405226694591");
+        //TODO: add unit test from taquito
+        return uint8tdup(&target[0], sizeof(target));
 
         
     }
     
-    int encodePublicKey(){
+//    [Prefix.EDPK]: new Uint8Array([13, 15, 37, 217]),
+//    [Prefix.SPPK]: new Uint8Array([3, 254, 226, 86]),
+//    [Prefix.P2PK]: new Uint8Array([3, 178, 139, 127]),
+    static uint8_t PREFIX_EDPK[] = {13,15,37, 217};
+    static uint8_t PREFIX_SPPK[] = {3, 254, 226, 86};
+    static uint8_t PREFIX_P2PK[] = {3, 178, 139, 127};
+    
+    struct Data encodePublicKey(char * pk, size_t length){
+        uint8_t prefix;
+        if(memcmp(PREFIX_EDPK, pk, 4)==0){
+                   prefix = 0x00;
+                  //TZ1 support only
+        }else if(memcmp(pk, PREFIX_SPPK, 3)==0){
+                   prefix = 0x01;
+        }else if(memcmp(pk, PREFIX_P2PK, 3)==0){
+                   prefix = 0x02;
+        }else{
+                   return;
+        }
         
+        size_t len = BRBase58Decode(NULL, 0, pk);
+        uint8_t decoded[len];
+        BRBase58Decode(&decoded[0], len, pk);
+
+        printf("\r\n decoded pkh:");
+        for(int i=0; i < len;i++){
+            printf("%02x", decoded[i]);
+        }
+        uint8_t target[len-3];//remove the prefix
+        memcpy(&target[0], &prefix,1);//add in the prefix
+        memcpy(&target[1], &decoded[4], len-4);//add in the decoded public key removing the prefix
+        printf("\r\n decoded public key:");
+        for(int i=0; i < len-3;i++){
+            printf("%02x", target[i]);
+        }
+        //printf("\r\n expected: ");
+        //TODO: add unit test from taquito
+        return uint8tdup(target, len-3);
+    }
+    
+
+   
+    uint8_t encodeParams(){
+        //TODO: we do not support michelson contract execution
+        return 0x00;
+    }
+    
+    //    export const addressEncoder = (val: string): string => {
+    //      const pubkeyPrefix = val.substr(0, 3);
+    //      switch (pubkeyPrefix) {
+    //        case Prefix.TZ1:
+    //        case Prefix.TZ2:
+    //        case Prefix.TZ3:
+    //          return '00' + pkhEncoder(val);
+    //        case Prefix.KT1:
+    //          return '01' + prefixEncoder(Prefix.KT1)(val) + '00';
+    //        default:
+    //          throw new Error('Invalid address');
+    //      }
+    //    };
+    
+    struct Data encodeAddress(char * address, size_t addressLen){
+        uint8_t prefix;
+        if(memcmp(address, "tz1", 3)==0 || memcmp(address, "tz2", 3)==0 || memcmp(address, "tz3", 3)==0){
+            prefix = 0x00;
+        }else{
+            //TODO: we do not support KT1
+            return;
+        }
+        
+        struct Data encoded = encodePkh(address, addressLen);
+       
+        uint8_t target[encoded.length + 1];
+        memcpy(&target[0], &prefix, 1);
+        memcpy(&target[1], encoded.buffer, encoded.length);
+        free(encoded.buffer);
+        
+        return uint8tdup(&target[0], sizeof(target));
+    }
+    
+
+    
+//    export const int32Encoder = (val: number | string): string => {
+//      const num = parseInt(String(val), 10);
+//      const byte = [];
+//      for (let i = 0; i < 4; i++) {
+//        const shiftBy = (4 - (i + 1)) * 8;
+//        byte.push((num & (0xff << shiftBy)) >> shiftBy);
+//      }
+//      return Buffer.from(byte).toString('hex');
+//    };
+    
+    uint8_t * encodeInt32(uint32_t u32){
+        uint8_t target[4];
+        target[3] = (uint8_t)u32;
+        target[2] = (uint8_t)(u32>>=8);
+        target[1] = (uint8_t)(u32>>=8);
+        target[0] = (uint8_t)(u32>>=8);
+        return strdup(target);
+    }
+    
+    uint8_t encodeBool(int v){
+        if(v>0){ return 0xff;}else{return 0x00;}
+    }
+    
+    uint8_t* encodeDelegate(char * pkh,size_t length, int delegate){
+        uint8_t * target;
+        uint8_t bool =  encodeBool(delegate);
+        if(delegate>0){
+            uint8_t buffer[26];
+            struct Data encodedPkh = encodePkh(pkh, length);
+            memcpy(&buffer[1], encodedPkh.buffer, 25);
+            free(encodedPkh.buffer);
+            target = buffer;
+        }else{
+            uint8_t buffer[1];
+            target = buffer;
+        }
+        memcpy(target,&bool, 1);
+        return strdup(target);
         
     }
     
-    uint8_t encodeParams(){
-        //TODO: we do not support michelson contract execution atm
-        return 0x00;
+//    // See https://tezos.gitlab.io/api/p2p.html
+//    export const kindMapping: { [key: number]: string } = {
+//      0x04: 'activate_account',
+//      0x6b: 'reveal',
+//      0x6e: 'delegation',
+//      0x6c: 'transaction',
+//      0x6d: 'origination',
+//      0x06: 'ballot',
+//      0x00: 'endorsement',
+//      0x01: 'seed_nonce_revelation',
+//      0x05: 'proposals',
+//    };
+
+    enum operation {
+        reveal = 0x6b,
+        delegation = 0x6e,
+        transaction = 0x6c,
+        seed_nonce_revalation= 0x01
+    };
+    uint8_t * encodeOperation(enum operation op, ...){
+        switch (op) {
+            case reveal:
+                break;
+            case delegation:
+                break;
+            case transaction:
+                //TODO: pass on varargs to encodeTransaction(...);
+                break;
+            default:
+                //ERROR
+                break;
+        }
+        
     }
+    //[Prefix.B]: new Uint8Array([1, 52]),
+    uint8_t * encodeBranch(char * branch, size_t length){
+        uint8_t target[length+2];
+        uint8_t prefix[2] = {1, 52};
+        memcpy(&target[0], &prefix[0], 2);
+        memcpy(&target[2], branch, length);
+        return strdup(target);
+    }
+    
+    
+    uint8_t * secretEncoder(){
+        //UNNEEDED in V0
+        //TODO:
+    }
+    
+    
+    uint8_t * rawEncoder(){
+        //UNNEEDED in V0
+        //TODO:
+    }
+    
     
     
  void

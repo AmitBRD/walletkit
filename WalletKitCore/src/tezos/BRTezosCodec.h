@@ -27,12 +27,19 @@ struct BRTezosDataRecord{
     char * hexData;
 } ;
 
+struct Data{
+    uint8_t * buffer;
+    size_t length;
+};
+
 uint8_t* padLeft(BRTezosData data, size_t targetSize);
 uint8_t * encodeBytes(uint8_t * bytes, uint64_t bytesLen);
 uint8_t * encodeString(char * value, uint64_t strLength);
 uint8_t * zarithEnoder(uint8_t * value, size_t count);
 void encodeNumber ( UInt256 number);
-uint8_t * encodePkh(char * pkh, size_t length );
+struct Data encodePkh(char * pkh, size_t length );
+uint8_t* encodeInt32(uint32_t u32);
+struct Data encodeAddress(char * pk, size_t length);
 #ifdef __cplusplus
 }
 #endif
