@@ -39,7 +39,15 @@ runTezosTest (void /* ... */) {
     
     free(value);
     
-    struct Data zarithData = encodeNumber(uint256("000000000000000000000000000000000000000000000000001fffffffffffff"));
+    struct Data zarithData = encodeNumber(uint256("00000000000000000000000000000000000000000000000000000000000003e8"));
+          printf("\r\n Zarith expected:e807 actual:");
+          printBuffer(zarithData);
+          free(zarithData.buffer);
+    zarithData = encodeNumber(uint256("0000000000000000000000000000000000000000000000000000000000002713"));
+             printf("\r\n Zarith expected:934e actual:");
+             printBuffer(zarithData);
+             free(zarithData.buffer);
+    zarithData = encodeNumber(uint256("000000000000000000000000000000000000000000000000001fffffffffffff"));
        printf("\r\n Zarith expected:ffffffffffffff0f actual:");
        printBuffer(zarithData);
        free(zarithData.buffer);
