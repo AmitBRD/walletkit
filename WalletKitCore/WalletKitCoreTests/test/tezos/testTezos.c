@@ -151,6 +151,28 @@ runTezosTest (void /* ... */) {
     free(encodedMsg.buffer);
     free(operations[0]->details.delegation);
     free(operations[0]);
+    
+    
+    
+    struct RevealOperation * rtx = malloc(sizeof(struct RevealOperation));
+        rtx->counter = uint256("0000000000000000000000000000000000000000000000000000000000000001");//1
+        rtx->fee =uint256("0000000000000000000000000000000000000000000000000000000000002710");//10000
+        rtx->gasLimit =uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+        rtx->storageLimit=uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+        rtx->source= "tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn";
+        rtx->publicKey="edpkvS5QFv7KRGfa3b87gg9DBpxSm3NpSwnjhUjNBQrRUUR66F7C9g";
+       operations[0] = malloc(sizeof(struct Operation2));
+       operations[0]->details.reveal = rtx;
+       operations[0]->op = reveal;
+       
+       encodedMsg = encode("BLzyjjHKEKMULtvkpSHxuZxx6ei6fpntH2BTkYZiLgs8zLVstvX", &operations[0], 1 );
+       printf("\r\n Reveal expected:a99b946c97ada0f42c1bdeae0383db7893351232a832d00d0cd716eb6f66e5616b0035e993d8c7aaa42b5e3ccd86a33390ececc73abd904e010a0a00ebcf82872f4942052704e95dc4bfa0538503dbece27414a39b6650bcecbff896 actual:");
+       printBuffer(encodedMsg);
+       free(encodedMsg.buffer);
+       free(operations[0]->details.reveal);
+       free(operations[0]);
+    
+    
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);
     free(encoded2);

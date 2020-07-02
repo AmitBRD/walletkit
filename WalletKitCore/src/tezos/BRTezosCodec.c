@@ -522,27 +522,23 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     
 //    [Prefix.EDPK]: new Uint8Array([13, 15, 37, 217]),
 //    [Prefix.SPPK]: new Uint8Array([3, 254, 226, 86]),
-//    [Prefix.P2PK]: new Uint8Array([3, 178, 139, 127]),
-    static uint8_t PREFIX_EDPK[] = {13,15,37, 217};
-    static uint8_t PREFIX_SPPK[] = {3, 254, 226, 86};
-    static uint8_t PREFIX_P2PK[] = {3, 178, 139, 127};
-    
+//    [Prefix.P2PK]: new Uint8Array([3, 178, 139, 127]),    
     struct Data encodePublicKey(char * pk){
         uint8_t prefix;
-        if(memcmp(PREFIX_EDPK, pk, 4)==0){
+        
+        if(memcmp(pk,"edpk", 4)==0){
                    prefix = 0x00;
-                  //TZ1 support only
-        }else if(memcmp(pk, PREFIX_SPPK, 3)==0){
+        }else if(memcmp(pk, "sppk", 4)==0){
                    prefix = 0x01;
-        }else if(memcmp(pk, PREFIX_P2PK, 3)==0){
+        }else if(memcmp(pk, "p2pk", 4)==0){
                    prefix = 0x02;
         }else{
                    return;
         }
         
-        size_t len = BRBase58Decode(NULL, 0, pk);
+        size_t len = BRBase58CheckDecode(NULL, 0, pk);
         uint8_t decoded[len];
-        BRBase58Decode(&decoded[0], len, pk);
+        BRBase58CheckDecode(&decoded[0], len, pk);
 
 //        printf("\r\n decoded pkh:");
 //        for(int i=0; i < len;i++){
@@ -703,6 +699,18 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
            return concatAndFreeDataBuffers(target, params);
        }
     
+    struct Data encodeReveal(char* source,UInt256 fee,UInt256 counter,UInt256 gasLimit,UInt256 storageLimit,char * publicKey){
+        size_t params = 6;
+        struct Data target[params];
+        target[0]=encodePkh(source);
+        target[1]=encodeNumber(fee);
+        target[2]=encodeNumber(counter);
+        target[3]=encodeNumber(gasLimit);
+        target[4]=encodeNumber(storageLimit);
+        target[5]=encodePublicKey(publicKey);
+        return concatAndFreeDataBuffers(target, params);
+    }
+    
     
     
     
@@ -750,8 +758,18 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     struct Data encodeOperation2(struct Operation2 * operation){
         struct Data * bufferData;
         switch (operation->op) {
-            case reveal:
+            case reveal:{
+                struct RevealOperation * reveal = operation->details.reveal;
+                               struct Data data = encodeReveal(reveal->source,
+                                                                   reveal->fee,
+                                                                   reveal->counter,
+                                                                   reveal->gasLimit,
+                                                                   reveal->storageLimit,
+                                                                   reveal->publicKey
+                                                                   );
+                               bufferData = &data;
                 break;
+            }
             case delegation:
             {
                 struct DelegateOperation * delegate = operation->details.delegation;

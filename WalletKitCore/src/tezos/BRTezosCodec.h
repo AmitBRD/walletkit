@@ -94,9 +94,19 @@ struct DelegateOperation{
     UInt256 storageLimit;
 };
 
+struct RevealOperation{
+    char* source;
+    UInt256 fee;
+    UInt256 counter;
+    UInt256 gasLimit;
+    UInt256 storageLimit;
+    char * publicKey;
+};
+
 union Details{
     struct TransactionOperation * transaction;
     struct DelegateOperation * delegation;
+    struct RevealOperation * reveal;
 };
 
 struct Operation2{
