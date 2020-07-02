@@ -626,6 +626,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         if(v>0){ return 0xff;}else{return 0x00;}
     }
     
+    //@Deprectated -- use encodeDelegate2
     struct Data encodeDelegate(char * pkh,int delegate){
         uint8_t bool =  encodeBool(delegate);
         size_t len = 1;
@@ -642,6 +643,21 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             return uint8tdup(buffer, len);
         }
             
+    }
+    
+    struct Data encodeDelegate2(char* pkh){
+        if(pkh != NULL && pkh[0]!='\0'){
+            uint8_t bool =  encodeBool(1);
+            struct Data encodedPkh = encodePkh(pkh);
+            uint8_t buffer[encodedPkh.length+1];
+            memcpy(&buffer[1], encodedPkh.buffer, encodedPkh.length);
+            free(encodedPkh.buffer);
+            memcpy(&buffer[0], &bool, 1);
+            return uint8tdup(buffer, sizeof(buffer));
+        }else{
+            uint8_t buffer[1]={encodeBool(0)};
+            return uint8tdup(buffer, sizeof(buffer));
+        }
     }
     
     struct Data concatAndFreeDataBuffers(struct Data * parameters, size_t params){
@@ -675,6 +691,18 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         return concatAndFreeDataBuffers(target, params);
     }
     
+    struct Data encodeDelegation(char * source, UInt256 fee, UInt256 counter, UInt256 gasLimit, UInt256 storageLimit, char * delegate){
+           size_t params = 6;
+           struct Data target[params];
+           target[0]=encodePkh(source);
+           target[1]=encodeNumber(fee);
+           target[2]=encodeNumber(counter);
+           target[3]=encodeNumber(gasLimit);
+           target[4]=encodeNumber(storageLimit);
+           target[5]=encodeDelegate2(delegate);
+           return concatAndFreeDataBuffers(target, params);
+       }
+    
     
     
     
@@ -691,13 +719,14 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
 //      0x05: 'proposals',
 //    };
 
-    
+    //@Deprectated -- use encodeOperation2
     struct Data encodeOperation(struct Operation * operation){
         
         switch (operation->op) {
             case reveal:
                 break;
             case delegation:
+                
                 break;
             case transaction:
             {
@@ -719,34 +748,48 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     
     
     struct Data encodeOperation2(struct Operation2 * operation){
-        
+        struct Data * bufferData;
         switch (operation->op) {
             case reveal:
                 break;
             case delegation:
+            {
+                struct DelegateOperation * delegate = operation->details.delegation;
+                struct Data data = encodeDelegation(
+                                                    delegate->source,
+                                                    delegate->fee,
+                                                    delegate->counter,
+                                                    delegate->gasLimit,
+                                                    delegate->storageLimit,
+                                                    delegate->delegate
+                                                    );
+                bufferData = &data;
                 break;
+            }
             case transaction:
             {
                 struct TransactionOperation * tx = operation->details.transaction;
-                struct Data txData =  encodeTransaction(tx->source,
+                struct Data data = encodeTransaction(tx->source,
                                   tx->fee,
                                   tx->counter,
                                   tx->gasLimit,
                                   tx->storageLimit,
                                   tx->amount,
                                   tx->destination);
-                  uint8_t buffer[txData.length+1];
-                              buffer[0]= transaction;
-                              memcpy(&buffer[1], txData.buffer, txData.length);
-                              free(txData.buffer);
-                              return uint8tdup(buffer, sizeof(buffer));
+                bufferData = &data;
                 break;
             }
             default:
                 //ERROR
                 break;
         }
+        uint8_t buffer[bufferData->length+1];
+        buffer[0]= operation->op;
+        memcpy(&buffer[1], bufferData->buffer, bufferData->length);
+        free(bufferData->buffer);
+        return uint8tdup(buffer, sizeof(buffer));
     }
+    
     //[Prefix.B]: new Uint8Array([1, 52]),
     struct Data encodeBranch(char * branch){
         

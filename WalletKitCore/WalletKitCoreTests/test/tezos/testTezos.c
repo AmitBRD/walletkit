@@ -93,6 +93,16 @@ runTezosTest (void /* ... */) {
          printBuffer(encoded);
          free(encoded.buffer);
     
+    encoded = encodeDelegate2("tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn");
+    printf("\r\n Delegate expected:ff0035e993d8c7aaa42b5e3ccd86a33390ececc73abd actual:");
+         printBuffer(encoded);
+         free(encoded.buffer);
+    
+    encoded = encodeDelegate2(NULL);
+    printf("\r\n Delegate expected:00 actual:");
+         printBuffer(encoded);
+         free(encoded.buffer);
+    
     struct TransactionOperation * tx = malloc(sizeof(struct TransactionOperation));
     tx->operation.op = transaction;
     tx->counter = uint256("0000000000000000000000000000000000000000000000000000000000000001");//1
@@ -111,7 +121,6 @@ runTezosTest (void /* ... */) {
     struct Operation2 * operations[1];
     
     operations[0] = malloc(sizeof(struct Operation2));
-    
     operations[0]->details.transaction = tx;
     operations[0]->op = transaction;
     
@@ -121,7 +130,27 @@ runTezosTest (void /* ... */) {
     printBuffer(encodedMsg);
     free(encodedMsg.buffer);
     free(operations[0]->details.transaction);
+    free(operations[0]);
     
+    
+    
+    struct DelegateOperation * dtx = malloc(sizeof(struct DelegateOperation));
+     dtx->counter = uint256("0000000000000000000000000000000000000000000000000000000000000001");//1
+     dtx->fee =uint256("0000000000000000000000000000000000000000000000000000000000002710");//10000
+     dtx->gasLimit =uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+     dtx->storageLimit=uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+     dtx->source= "tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn";
+     dtx->delegate="tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn";
+    operations[0] = malloc(sizeof(struct Operation2));
+    operations[0]->details.delegation = dtx;
+    operations[0]->op = delegation;
+    
+    encodedMsg = encode("BLzyjjHKEKMULtvkpSHxuZxx6ei6fpntH2BTkYZiLgs8zLVstvX", &operations[0], 1 );
+    printf("\r\n Delegation expected:a99b946c97ada0f42c1bdeae0383db7893351232a832d00d0cd716eb6f66e5616e0035e993d8c7aaa42b5e3ccd86a33390ececc73abd904e010a0aff0035e993d8c7aaa42b5e3ccd86a33390ececc73abd actual:");
+    printBuffer(encodedMsg);
+    free(encodedMsg.buffer);
+    free(operations[0]->details.delegation);
+    free(operations[0]);
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);
     free(encoded2);

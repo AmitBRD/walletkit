@@ -73,6 +73,7 @@ struct Operation{
 };
 
 struct TransactionOperation{
+    //TODO deprecate Operation member
     struct Operation operation;
     char* source;
     char* destination;
@@ -85,8 +86,12 @@ struct TransactionOperation{
 };
 
 struct DelegateOperation{
-    struct TransactionOperation transaction;
-    int delegate;
+    char* source;
+    char* delegate;
+    UInt256 fee;
+    UInt256 counter;
+    UInt256 gasLimit;
+    UInt256 storageLimit;
 };
 
 union Details{
@@ -110,6 +115,7 @@ uint8_t* encodeInt32(uint32_t u32);
 struct Data encodeAddress(char * pk);
 struct Data encodeBranch(char * branch);
 struct Data encodeDelegate(char * pkh,int delegate);
+struct Data encodeDelegate2(char* pkh);
 struct Data encodeOperation(struct Operation * operation);
 struct Data encode(char * branch, struct Operation2 ** operations, size_t opSize);
 #ifdef __cplusplus
