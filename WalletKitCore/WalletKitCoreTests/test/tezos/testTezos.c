@@ -92,6 +92,8 @@ runTezosTest (void /* ... */) {
     printf("\r\n Delegate expected:00 actual:");
          printBuffer(encoded);
          free(encoded.buffer);
+    
+    
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);
     free(encoded2);

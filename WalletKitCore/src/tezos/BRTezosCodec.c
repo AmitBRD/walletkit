@@ -562,9 +562,10 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
     
 
    
-    uint8_t encodeParams(){
+    struct Data encodeParams(){
         //TODO: we do not support michelson contract execution
-        return 0x00;
+        uint8_t buffer[1]={0x00};
+        return uint8tdup(&buffer[0],1);
     }
     
     //    export const addressEncoder = (val: string): string => {
@@ -643,6 +644,38 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
             
     }
     
+    struct Data concatAndFreeDataBuffers(struct Data * parameters, size_t params){
+        size_t totalLength = 0;
+        for(int i=0; i < params; i++){
+            totalLength+=parameters[i].length;
+        }
+        uint8_t buffer[totalLength];
+        totalLength = 0;
+        for(int i=0; i < params; i++){
+            memcpy(&buffer[totalLength], parameters[i].buffer, parameters[i].length);
+            free(parameters[i].buffer);
+            totalLength+=parameters[i].length;
+        }
+        return  uint8tdup(buffer, totalLength);
+        
+    }
+    struct Data encodeTransaction(char * source, UInt256 fee, UInt256 counter, UInt256 gasLimit, UInt256 storageLimit, UInt256 amount, char * destination){
+        size_t params = 8;
+        struct Data target[params];
+        target[0]=encodePkh(source);
+        target[1]=encodeNumber(fee);
+        target[2]=encodeNumber(counter);
+        target[3]=encodeNumber(gasLimit);
+        target[4]=encodeNumber(storageLimit);
+        target[5]=encodeNumber(amount);
+        target[6]=encodeAddress(destination);
+        target[7]=encodeParams();
+        return concatAndFreeDataBuffers(&target[0], params);
+    }
+    
+    
+    
+    
 //    // See https://tezos.gitlab.io/api/p2p.html
 //    export const kindMapping: { [key: number]: string } = {
 //      0x04: 'activate_account',
@@ -686,8 +719,16 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
                          sizeof(decoded)-sizeof(prefix));
     }
     
-    void encodeTransaction(UInt256 fee){
-        return;
+    struct Data encode(char * branch, void * operations, size_t opSize){
+        struct Data buffer[opSize+1];
+        buffer[0] = encodeBranch(branch);
+        for(int i=0; i < opSize; i ++){
+            buffer[i+1];
+            //encodeOperation(<#enum operation op#>, <#struct __va_list_tag *args#>)
+        }
+        
+        struct Data result = concatAndFreeDataBuffers(&buffer[0], sizeof(buffer));
+        return result;
     }
     
     
