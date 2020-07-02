@@ -108,12 +108,19 @@ runTezosTest (void /* ... */) {
     printBuffer(encodedMsg);
     free(encodedMsg.buffer);
     
-    struct Operation* operations[1];
-    operations[0] = (struct Operation*) (tx);
-    encodedMsg = encode("BLzyjjHKEKMULtvkpSHxuZxx6ei6fpntH2BTkYZiLgs8zLVstvX", operations, 1 );
+    struct Operation2 * operations[1];
+    
+    operations[0] = malloc(sizeof(struct Operation2));
+    
+    operations[0]->details.transaction = tx;
+    operations[0]->op = transaction;
+    
+    
+    encodedMsg = encode("BLzyjjHKEKMULtvkpSHxuZxx6ei6fpntH2BTkYZiLgs8zLVstvX", &operations[0], 1 );
     printf("\r\n Transaction expected:a99b946c97ada0f42c1bdeae0383db7893351232a832d00d0cd716eb6f66e5616c0035e993d8c7aaa42b5e3ccd86a33390ececc73abd904e010a0ae807000035e993d8c7aaa42b5e3ccd86a33390ececc73abd00 actual:");
     printBuffer(encodedMsg);
     free(encodedMsg.buffer);
+    free(tx);
     
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);

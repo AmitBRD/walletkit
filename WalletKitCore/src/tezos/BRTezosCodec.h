@@ -89,11 +89,15 @@ struct DelegateOperation{
     int delegate;
 };
 
-union Ops{
-    struct TransactionOperation transaction;
-    struct DelegateOperation delegation;
+union Details{
+    struct TransactionOperation * transaction;
+    struct DelegateOperation * delegation;
 };
 
+struct Operation2{
+    enum operation op;
+    union Details details;
+};
 
 
 uint8_t* padLeft(BRTezosData data, size_t targetSize);
@@ -107,7 +111,7 @@ struct Data encodeAddress(char * pk);
 struct Data encodeBranch(char * branch);
 struct Data encodeDelegate(char * pkh,int delegate);
 struct Data encodeOperation(struct Operation * operation);
-struct Data encode(char * branch, struct Operation * operations, size_t opSize);
+struct Data encode(char * branch, struct Operation2 ** operations, size_t opSize);
 #ifdef __cplusplus
 }
 #endif

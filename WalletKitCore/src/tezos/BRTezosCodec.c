@@ -659,6 +659,8 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         return  uint8tdup(buffer, totalLength);
         
     }
+    
+    
     struct Data encodeTransaction(char * source, UInt256 fee, UInt256 counter, UInt256 gasLimit, UInt256 storageLimit, UInt256 amount, char * destination){
         size_t params = 8;
         struct Data target[params];
@@ -708,6 +710,36 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
                                   tx->amount,
                                   tx->destination);
                 //TODO: pass on varargs to encodeTransaction(...);
+            }
+            default:
+                //ERROR
+                break;
+        }
+    }
+    
+    
+    struct Data encodeOperation2(struct Operation2 * operation){
+        
+        switch (operation->op) {
+            case reveal:
+                break;
+            case delegation:
+                break;
+            case transaction:
+            {
+                struct TransactionOperation * tx = operation->details.transaction;
+                struct Data txData =  encodeTransaction(tx->source,
+                                  tx->fee,
+                                  tx->counter,
+                                  tx->gasLimit,
+                                  tx->storageLimit,
+                                  tx->amount,
+                                  tx->destination);
+                  uint8_t buffer[txData.length+1];
+                              buffer[0]= transaction;
+                              memcpy(&buffer[1], txData.buffer, txData.length);
+                              free(txData.buffer);
+                              return uint8tdup(buffer, sizeof(buffer));
                 break;
             }
             default:
@@ -727,14 +759,15 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
                          sizeof(decoded)-sizeof(prefix));
     }
     
-    struct Data encode(char * branch, struct Operation * operations, size_t opSize){
-        struct Data buffer[opSize+1];
+    struct Data encode(char * branch, struct Operation2 ** operations, size_t opSize){
+        struct Data buffer[opSize+2];
         buffer[0] = encodeBranch(branch);
+       
         for(int i=0; i < opSize; i ++){
-            buffer[i+1]=encodeOperation(&operations[i]);
+            buffer[i+1]=encodeOperation2(operations[i]);
         }
         
-        struct Data result = concatAndFreeDataBuffers(&buffer[0], sizeof(buffer));
+        struct Data result = concatAndFreeDataBuffers(&buffer[0], opSize+1);
         return result;
     }
     
