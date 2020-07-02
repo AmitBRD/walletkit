@@ -670,7 +670,7 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
         target[5]=encodeNumber(amount);
         target[6]=encodeAddress(destination);
         target[7]=encodeParams();
-        return concatAndFreeDataBuffers(&target[0], params);
+        return concatAndFreeDataBuffers(target, params);
     }
     
     
@@ -690,22 +690,30 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
 //    };
 
     
-    uint8_t * encodeOperation(enum operation op, va_list args){
-        switch (op) {
+    struct Data encodeOperation(struct Operation * operation){
+        
+        switch (operation->op) {
             case reveal:
                 break;
             case delegation:
                 break;
             case transaction:
-                (uint8_t)op;
-                //encodeTransaction(args);
+            {
+                struct TransactionOperation * tx = (struct TransactionOperation *)operation;
+                return encodeTransaction(tx->source,
+                                  tx->fee,
+                                  tx->counter,
+                                  tx->gasLimit,
+                                  tx->storageLimit,
+                                  tx->amount,
+                                  tx->destination);
                 //TODO: pass on varargs to encodeTransaction(...);
                 break;
+            }
             default:
                 //ERROR
                 break;
         }
-        
     }
     //[Prefix.B]: new Uint8Array([1, 52]),
     struct Data encodeBranch(char * branch){
@@ -719,12 +727,11 @@ uint8_t* padLeft(BRTezosData data, size_t targetSize){
                          sizeof(decoded)-sizeof(prefix));
     }
     
-    struct Data encode(char * branch, void * operations, size_t opSize){
+    struct Data encode(char * branch, struct Operation * operations, size_t opSize){
         struct Data buffer[opSize+1];
         buffer[0] = encodeBranch(branch);
         for(int i=0; i < opSize; i ++){
-            buffer[i+1];
-            //encodeOperation(<#enum operation op#>, <#struct __va_list_tag *args#>)
+            buffer[i+1]=encodeOperation(&operations[i]);
         }
         
         struct Data result = concatAndFreeDataBuffers(&buffer[0], sizeof(buffer));

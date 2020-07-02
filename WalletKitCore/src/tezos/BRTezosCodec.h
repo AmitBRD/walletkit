@@ -33,17 +33,68 @@ struct Data{
 };
 
 
+//export const RevealSchema = {
+//  source: 'pkh',
+//  fee: 'zarith',
+//  counter: 'zarith',
+//  gas_limit: 'zarith',
+//  storage_limit: 'zarith',
+//  public_key: 'public_key',
+//};
+//
+//export const DelegationSchema = {
+//  source: 'pkh',
+//  fee: 'zarith',
+//  counter: 'zarith',
+//  gas_limit: 'zarith',
+//  storage_limit: 'zarith',
+//  delegate: 'delegate',
+//};
+//
+//export const TransactionSchema = {
+//  source: 'pkh',
+//  fee: 'zarith',
+//  counter: 'zarith',
+//  gas_limit: 'zarith',
+//  storage_limit: 'zarith',
+//  amount: 'zarith',
+//  destination: 'address',
+//  parameters: 'parameters',
+//}
+
 enum operation {
     reveal = 0x6b,
     delegation = 0x6e,
     transaction = 0x6c,
     seed_nonce_revalation= 0x01
 };
-
 struct Operation{
     enum operation op;
-    
 };
+
+struct TransactionOperation{
+    struct Operation operation;
+    char* source;
+    char* destination;
+    UInt256 fee;
+    UInt256 counter;
+    UInt256 gasLimit;
+    UInt256 storageLimit;
+    UInt256 amount;
+    //TODO: no param support atm
+};
+
+struct DelegateOperation{
+    struct TransactionOperation transaction;
+    int delegate;
+};
+
+union Ops{
+    struct TransactionOperation transaction;
+    struct DelegateOperation delegation;
+};
+
+
 
 uint8_t* padLeft(BRTezosData data, size_t targetSize);
 uint8_t * encodeBytes(uint8_t * bytes, uint64_t bytesLen);
@@ -55,6 +106,8 @@ uint8_t* encodeInt32(uint32_t u32);
 struct Data encodeAddress(char * pk);
 struct Data encodeBranch(char * branch);
 struct Data encodeDelegate(char * pkh,int delegate);
+struct Data encodeOperation(struct Operation * operation);
+struct Data encode(char * branch, struct Operation * operations, size_t opSize);
 #ifdef __cplusplus
 }
 #endif
