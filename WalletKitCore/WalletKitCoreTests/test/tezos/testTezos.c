@@ -173,6 +173,43 @@ runTezosTest (void /* ... */) {
        free(operations[0]);
     
     
+    //TODO: test array of operations e.g. reveal + transaction
+    struct Operation2 * operationsMulti[2];
+    operationsMulti[0]= malloc(sizeof(struct Operation2));
+    operationsMulti[1]= malloc(sizeof(struct Operation2));
+    
+    rtx = malloc(sizeof(struct RevealOperation));
+    rtx->counter = uint256("0000000000000000000000000000000000000000000000000000000000000001");//1
+    rtx->fee =uint256("0000000000000000000000000000000000000000000000000000000000002710");//10000
+    rtx->gasLimit =uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+    rtx->storageLimit=uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+    rtx->source= "tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn";
+    rtx->publicKey="edpkvS5QFv7KRGfa3b87gg9DBpxSm3NpSwnjhUjNBQrRUUR66F7C9g";
+    operationsMulti[0]->details.reveal = rtx;
+    operationsMulti[0]->op = reveal;
+    tx = malloc(sizeof(struct TransactionOperation));
+    tx->operation.op = transaction;
+    tx->counter = uint256("0000000000000000000000000000000000000000000000000000000000000001");//1
+    tx->amount =uint256("00000000000000000000000000000000000000000000000000000000000003e8");//1000
+    tx->fee =uint256("0000000000000000000000000000000000000000000000000000000000002710");//10000
+    tx->gasLimit =uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+    tx->storageLimit=uint256("000000000000000000000000000000000000000000000000000000000000000a");//10
+    tx->source= "tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn";
+    tx->destination="tz1QZ6KY7d3BuZDT1d19dUxoQrtFPN2QJ3hn";
+    operationsMulti[1]->details.transaction = tx;
+    operationsMulti[1]->op = transaction;    //TODO: figure out gas estimation
+    
+    
+    encodedMsg =encode("BLzyjjHKEKMULtvkpSHxuZxx6ei6fpntH2BTkYZiLgs8zLVstvX", operationsMulti, 2 );
+    printf("\r\n Multi Operations expected:a99b946c97ada0f42c1bdeae0383db7893351232a832d00d0cd716eb6f66e5616b0035e993d8c7aaa42b5e3ccd86a33390ececc73abd904e010a0a00ebcf82872f4942052704e95dc4bfa0538503dbece27414a39b6650bcecbff8966c0035e993d8c7aaa42b5e3ccd86a33390ececc73abd904e010a0ae807000035e993d8c7aaa42b5e3ccd86a33390ececc73abd00 actual:");
+    printBuffer(encodedMsg);
+    
+    free(operationsMulti[0]->details.reveal);
+    free(operationsMulti[1]->details.transaction);
+    free(operationsMulti[0]);
+    free(operationsMulti[1]);
+    //TODO: test sign the transaction
+    
     uint32_t v = -123654;
     char * encoded2 = encodeInt32(&v);
     free(encoded2);
