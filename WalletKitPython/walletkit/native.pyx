@@ -94,7 +94,7 @@ cdef class Account:
         #cdef BRMasterPubKey key = _ethAccount.masterPubKey
         #return "Done"
 
-    def derivePrivateKeyFromSeed(self,_seed, _phrase,_index):
+    def derive_private_key_from_seed_and_index(self,_seed, _phrase,_index, _der_compressed=1):
         cdef BRKey privateKey
         cdef UInt512 ss;
         ss.u8= _seed
@@ -111,10 +111,13 @@ cdef class Account:
         print(v3)
         print(v4)
         BRBIP32PrivKeyPath(&privateKey, &ss, sizeof(UInt512), 5, v1,v2,v3,v4,index)#, 60 | 0x80000000,0 | 0x80000000,0,0);                   
-        privateKey.compressed = 0;
+        privateKey.compressed = _der_compressed;
         cdef size_t keyLen = BRKeyPubKey(&privateKey, NULL, 0);
 
+        #// "The public key is what we need in order to derive its Ethereum address. Every EC public key
+        #// begins with the 0x04 prefix before giving the location of the two point on the curve. You
+        #// should remove this leading 0x04 byte in order to hash it correctly. ...
+        #addressDetailFillKey(address, &key, index);
         print(binascii.hexlify(bytearray(privateKey.secret.u8)))
         print(binascii.hexlify(bytearray(privateKey.pubKey)))
-
-        return privateKey.secret.u8;
+        return privateKey;
