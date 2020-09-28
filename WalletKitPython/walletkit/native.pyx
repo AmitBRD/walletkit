@@ -110,7 +110,7 @@ cdef class Account:
         print(v2)
         print(v3)
         print(v4)
-        BRBIP32PrivKeyPath(&privateKey, &ss, sizeof(UInt512), 1, v1,v2,v3,v4,index)#, 60 | 0x80000000,0 | 0x80000000,0,0);                   
+        BRBIP32PrivKeyPath(&privateKey, &ss, sizeof(UInt512), 5, v1,v2,v3,v4,index)#, 60 | 0x80000000,0 | 0x80000000,0,0);                   
         privateKey.compressed = 0;
         cdef size_t keyLen = BRKeyPubKey(&privateKey, NULL, 0);
 
