@@ -55,6 +55,11 @@ cdef extern from "../src/support/BRInt.h":
         uint64_t u64[4]
 
 
+cdef extern from "../src/ethereum/base/BREthereumAddress.h":
+    ctypedef unsigned int uint8_t
+    ctypedef struct BREthereumAddress:
+        uint8_t bytes[20]
+    BREthereumAddress ethAddressCreateKey (const BRKey *key)
 
 cdef extern from "BRCryptoAccount.h":
     ctypedef unsigned long uint64_t

@@ -43,6 +43,8 @@ class TestKey(unittest.TestCase):
       self.assertEqual(binascii.hexlify(bytearray(val["secret"]["u8"])), b'03fad2c9dcc89519a4c1ac0021cd94f5bc1af981038d71fffac6538251ede2f8')
       self.assertEqual(binascii.hexlify(bytearray(val["pubKey"][:33])),b'03032b815405e235a37552b185c577223fef428dd7f53d5548fc5a11d5646d9220')
       print(binascii.hexlify(bytearray(val["secret"]["u8"])))
+      address = a.generate_eth_address(val["pubKey"], val["compressed"])
+      print(binascii.hexlify(bytearray(address["bytes"])))
    
 
 if __name__ == '__main__':

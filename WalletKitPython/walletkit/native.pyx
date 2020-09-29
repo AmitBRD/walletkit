@@ -121,3 +121,10 @@ cdef class Account:
         print(binascii.hexlify(bytearray(privateKey.secret.u8)))
         print(binascii.hexlify(bytearray(privateKey.pubKey)))
         return privateKey;
+
+    def generate_eth_address(self, _pubKey, _der_compressed):
+        cdef BRKey key
+        key.pubKey = _pubKey
+        key.compressed = _der_compressed
+        address =  ethAddressCreateKey (&key)
+        return address
