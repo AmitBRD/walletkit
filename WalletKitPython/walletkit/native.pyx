@@ -77,7 +77,7 @@ cdef class BRSequence:
         cdef UInt512 ss
         ss.u8 = _seed
         key = BRBIP32MasterPubKey( &ss, sizeof(ss))
-        print (key.pubKey)
+        #print (key.pubKey)
         return key.pubKey
 
     def test(self,_seed, _phrase):
@@ -86,7 +86,7 @@ cdef class BRSequence:
         ss.u8= _seed
         #print(ss.u8)
         BRBIP39DeriveKey (ss.u8, _phrase, NULL);
-        print(binascii.hexlify(bytearray(ss.u8)))
+        #print(binascii.hexlify(bytearray(ss.u8)))
         key= BRBIP32MasterPubKey(&ss, sizeof (ss));
         return key.pubKey
         #return ZERO[0]
@@ -99,7 +99,7 @@ cdef class BRSequence:
         cdef UInt512 ss;
         ss.u8= _seed
         BRBIP39DeriveKey (ss.u8, _phrase, NULL);
-        print(binascii.hexlify(bytearray(ss.u8)))
+        #print(binascii.hexlify(bytearray(ss.u8)))
         cdef unsigned long v1 = 44 | 0x80000000
         cdef unsigned long v2 = 60 | 0x80000000
         cdef unsigned long v3 = 0 | 0x80000000
