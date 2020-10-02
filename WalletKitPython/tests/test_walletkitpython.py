@@ -35,6 +35,8 @@ class TestKey(unittest.TestCase):
       seed = [0] * 64
       #print(binascii.hexlify(bytearray(seed[0:32])))
       #print(binascii.hexlify(bytearray(seed[32:])))
+
+      #Tests keys generated from https://iancoleman.io/bip39/
       phrase = "ginger settle marine tissue robot crane night number ramp coast roast critic".encode("UTF-8")
       val = a.derive_private_key_from_seed_and_index_eth(seed,phrase,0)
       self.assertEqual(binascii.hexlify(bytearray(val["secret"]["u8"])), b'bf89b834472a1058b83eb4dee176d7c788ea35c70a55ce8a166b4119bfe3b8fb')
@@ -43,7 +45,7 @@ class TestKey(unittest.TestCase):
       self.assertEqual(binascii.hexlify(bytearray(val["secret"]["u8"])), b'03fad2c9dcc89519a4c1ac0021cd94f5bc1af981038d71fffac6538251ede2f8')
       self.assertEqual(binascii.hexlify(bytearray(val["pubKey"][:33])),b'03032b815405e235a37552b185c577223fef428dd7f53d5548fc5a11d5646d9220')
       print(binascii.hexlify(bytearray(val["secret"]["u8"])))
-      address = a.generate_eth_address(val["pubKey"], val["compressed"])
+      address = a.generate_address_eth(val["pubKey"], val["compressed"])
       print(binascii.hexlify(bytearray(address["bytes"])))
    
 

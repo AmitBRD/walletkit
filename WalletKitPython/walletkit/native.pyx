@@ -118,11 +118,11 @@ cdef class BRSequence:
         #// begins with the 0x04 prefix before giving the location of the two point on the curve. You
         #// should remove this leading 0x04 byte in order to hash it correctly. ...
         #addressDetailFillKey(address, &key, index);
-        print(binascii.hexlify(bytearray(privateKey.secret.u8)))
-        print(binascii.hexlify(bytearray(privateKey.pubKey)))
+        #print(binascii.hexlify(bytearray(privateKey.secret.u8)))
+        #print(binascii.hexlify(bytearray(privateKey.pubKey)))
         return privateKey;
 
-    def generate_eth_address(self, _pubKey, _der_compressed):
+    def generate_address_eth(self, _pubKey, _der_compressed):
         cdef BRKey key
         key.pubKey = _pubKey
         key.compressed = _der_compressed
