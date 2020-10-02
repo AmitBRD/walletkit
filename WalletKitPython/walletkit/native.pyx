@@ -58,7 +58,7 @@ cdef class Hasher:
 
        
 
-cdef class Account:
+cdef class BRSequence:
     
     def __init__(self):
         pass
@@ -94,7 +94,7 @@ cdef class Account:
         #cdef BRMasterPubKey key = _ethAccount.masterPubKey
         #return "Done"
 
-    def derive_private_key_from_seed_and_index(self,_seed, _phrase,_index, _der_compressed=1):
+    def derive_private_key_from_seed_and_index_eth(self,_seed, _phrase,_index, _der_compressed=1):
         cdef BRKey privateKey
         cdef UInt512 ss;
         ss.u8= _seed
@@ -106,10 +106,10 @@ cdef class Account:
         cdef unsigned long v4 = 0
         cdef unsigned long index = _index
         # The BIP32 privateKey for m/44'/60'/0'/0/index
-        print(v1)
-        print(v2)
-        print(v3)
-        print(v4)
+        #print(v1)
+        #print(v2)
+        #print(v3)
+        #print(v4)
         BRBIP32PrivKeyPath(&privateKey, &ss, sizeof(UInt512), 5, v1,v2,v3,v4,index)#, 60 | 0x80000000,0 | 0x80000000,0,0);                   
         privateKey.compressed = _der_compressed;
         cdef size_t keyLen = BRKeyPubKey(&privateKey, NULL, 0);
